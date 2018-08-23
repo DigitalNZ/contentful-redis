@@ -1,0 +1,17 @@
+Dir["#{Dir.pwd}/lib/contentful_redis/**/*.rb"].each { |f| require f }
+
+module ContentfulRedis
+  VERSION = '0.0.1'
+
+  class << self
+    attr_accessor :configuration
+
+    def configuration
+      @configuration ||= ContentfulRedis::Configuration.new
+    end
+
+    def configure
+      yield(configuration) if block_given?
+    end
+  end
+end

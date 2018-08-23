@@ -1,5 +1,6 @@
 require "bundler/setup"
-require "contentful_redis/rb"
+require "contentful_redis"
+require 'pry'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

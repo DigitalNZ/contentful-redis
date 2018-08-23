@@ -1,11 +1,11 @@
 
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "contentful_redis/rb/version"
+require 'contentful_redis'
 
 Gem::Specification.new do |spec|
   spec.name          = "contentful-redis-rb"
-  spec.version       = ContentfulRedis::Rb::VERSION
+  spec.version       = ContentfulRedis::VERSION
   spec.authors       = ["DanHenton"]
   spec.email         = ["Dan.Henton@gmail.com"]
 

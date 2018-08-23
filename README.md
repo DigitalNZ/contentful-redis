@@ -1,15 +1,13 @@
-# ContentfulRedis::Rb
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/contentful_redis/rb`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+# ContentfulRedis
+A light weight read only contentful api wrapper which caches your responses in redis.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'contentful_redis-rb'
+gem 'redis'
+gem 'contentful-redis-rb'
 ```
 
 And then execute:
@@ -18,11 +16,9 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install contentful_redis-rb
+    $ gem install contentful-redis-rb
 
-## Usage
-
-TODO: Write usage instructions here
+## Configuration
 
 ## Development
 
@@ -32,7 +28,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/contentful_redis-rb.
+Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/contentful-redis-rb.
 
 ## License
 
