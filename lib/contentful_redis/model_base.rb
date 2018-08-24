@@ -5,7 +5,7 @@ module ContentfulRedis
   class ModelBase
     class << self
       def space
-        ContentfulRedis::SPACES.first[1]
+        ContentfulRedis.configuration.spaces.first[1]
       end
 
       def find(id)
@@ -17,7 +17,7 @@ module ContentfulRedis
       def find_by(args)
         raise ContentfulRedis::Error::ArgumentError, 'Only support slug option' if args.keys != [:slug]
 
-        id = $redis.get(ContentfulRedis::KeyManager.attribute_glossary(self, args[:slug]))
+        id = ContentfulRedis.configuration.redis.get(ContentfulRedis::KeyManager.attribute_glossary(self, args[:slug]))
         raise ContentfulRedis::Error::RecordNotFound, 'Blank ID' if id.blank?
 
         find(id)
@@ -88,7 +88,7 @@ module ContentfulRedis
 
     def content_model_class(type)
       begin
-        "Contentful::#{type.classify}".constantize
+        "#{ContentfulRedis.configuration.model_module}#{type.classify}".constantize
       rescue NameError
         raise ContentfulRedis::Error::ClassNotFound, "Content type: #{type} not defined, please define it"
       end

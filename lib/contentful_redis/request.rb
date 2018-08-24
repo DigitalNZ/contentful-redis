@@ -15,7 +15,7 @@ module ContentfulRedis
         @access_token = @space[:preview_access_token]
       end
 
-      params[:include] = ContentfulRedis::QUERY_DEPTH || 1
+      params[:include] = 1
 
       @parameters = params
     end
@@ -23,19 +23,23 @@ module ContentfulRedis
     def call
       generated_key = ContentfulRedis::KeyManager.content_model_key(@space, @endpoint, @parameters)
 
-      return JSON.parse($redis.get(generated_key)) if $redis.exists(generated_key)
+      return JSON.parse(redis.get(generated_key)) if redis.exists(generated_key)
 
       fetch_from_origin(generated_key)
     end
 
     private
 
+    def redis
+      ContentfulRedis.configuration.redis
+    end
+
     def fetch_from_origin(generated_key)
       response = perform_request
 
       raise ContentfulRedis::Error::RecordNotFound, 'Contentful entry was not found' if response.match?(/"total":0/)
 
-      $redis.set(generated_key, response)
+      redis.set(generated_key, response)
 
       JSON.parse(response)
     end

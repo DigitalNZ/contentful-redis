@@ -21,5 +21,36 @@ RSpec.describe ContentfulRedis do
       
       expect(ContentfulRedis.configuration.spaces).to eq space_config
     end
+
+    it 'can set the redis database' do
+      ContentfulRedis.configure do |config|
+        config.redis = Redis::Store.new(
+          host: (ENV['REDIS_HOST']) || 'localhost',
+          port: 6379,
+          db:   1,
+          namespace: 'contentful_redis',
+        )
+      end
+      expect(ContentfulRedis.configuration.redis).to be_a(Redis)
+
+      ContentfulRedis.configuration.redis.reconnect
+      expect(ContentfulRedis.configuration.redis.connected?).to be true
+    end
+
+    it 'can configure content model module' do
+      ContentfulRedis.configure do |config|
+        config.model_module = 'Contentful'
+      end
+
+      expect(ContentfulRedis.configuration.model_module).to eq 'Contentful::'
+    end
+
+    it 'can configure deeper model modules' do
+      ContentfulRedis.configure do |config|
+        config.model_module = 'Contentful::Model'
+      end
+
+      expect(ContentfulRedis.configuration.model_module).to eq 'Contentful::Model::'
+    end
   end
 end
