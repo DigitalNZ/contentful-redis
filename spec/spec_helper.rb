@@ -3,6 +3,8 @@ require "contentful_redis"
 require 'pry'
 require 'redis-store'
 
+require 'support/factory_bot'
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
