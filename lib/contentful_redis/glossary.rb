@@ -21,8 +21,7 @@ module ContentfulRedis
 
         key = ContentfulRedis::KeyManager.attribute_glossary(@klass, attr_value)
         entry_id = entry.dig('sys', 'id')
-
-        $redis.set(key, entry_id)
+        ContentfulRedis.configuration.redis.set(key, entry_id)
 
         key
       end

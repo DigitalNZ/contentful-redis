@@ -11,7 +11,7 @@ module ContentfulRedis
       def find(id, env = ContentfulRedis.configuration.default_env || :published)
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters, env).call)
+        new(ContentfulRedis::Request.new(space, parameters, :get, env).call)
       end
 
       # TODO: Update the supported attributes
@@ -24,8 +24,10 @@ module ContentfulRedis
         find(id, env)
       end
 
-      def update_redis(id)
-        # update the redis cache
+      def update(id , env = ContentfulRedis.configuration.default_env || :published)
+        parameters = { 'sys.id': id, content_type: content_model }
+
+        new(ContentfulRedis::Request.new(space, parameters, :update, env).call)
       end
 
       def content_model

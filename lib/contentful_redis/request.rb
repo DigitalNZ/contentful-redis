@@ -4,8 +4,9 @@
 # Atempt to fetch response from redis before requesting to the contentful api
 module ContentfulRedis
   class Request
-    def initialize(space, params, env = ContentfulRedis.configuration.default_env || :published)
+    def initialize(space, params, action = :get, env = ContentfulRedis.configuration.default_env || :published)
       @space = space
+      @action = action
 
       if env.to_s.downcase == 'published'
         @endpoint = 'cdn'
@@ -23,9 +24,9 @@ module ContentfulRedis
     def call
       generated_key = ContentfulRedis::KeyManager.content_model_key(@space, @endpoint, @parameters)
 
-      return JSON.parse(redis.get(generated_key)) if redis.exists(generated_key)
+      return fetch_from_origin(generated_key) if @action == :update || !redis.exists(generated_key)
 
-      fetch_from_origin(generated_key)
+      JSON.parse(redis.get(generated_key)) 
     end
 
     private
