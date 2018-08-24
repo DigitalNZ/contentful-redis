@@ -4,20 +4,21 @@ require 'spec_helper'
 require 'support/setup'
 
 RSpec.describe ContentfulRedis::KeyManager, contentful: true do
+  let!(:test_class) { Page = Class.new(ContentfulRedis::ModelBase) }
+
   context '#attribute_glossary' do
     it 'creates the attribute_glossary key' do
-      expect(ContentfulRedis::KeyManager.attribute_glossary(Contentful::Page, :slug)).to eq 'xxx/page/slug'
+      expect(ContentfulRedis::KeyManager.attribute_glossary(test_class, :slug)).to eq 'xxxx/page/slug'
     end
   end
 
   context '#content_model_key' do
-    let(:klass) { Contentful::Page }
     it 'creates the contentful model response key' do
       expect(
         ContentfulRedis::KeyManager.content_model_key(
-          klass.space,
+          test_class.space,
           'preview',
-          'sys.id': 'XXXXX', content_type: klass.content_model
+          'sys.id': 'XXXXX', content_type: test_class.content_model
         )
       ).to eq 'xxxx/preview/sys.id-XXXXX/content_type-page'
     end

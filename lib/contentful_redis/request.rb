@@ -4,10 +4,10 @@
 # Atempt to fetch response from redis before requesting to the contentful api
 module ContentfulRedis
   class Request
-    def initialize(space, params)
+    def initialize(space, params, env = ContentfulRedis.configuration.default_env || :published)
       @space = space
 
-      if Rails.env.production?
+      if env.to_s.downcase == 'published'
         @endpoint = 'cdn'
         @access_token = @space[:access_token]
       else
@@ -55,6 +55,8 @@ module ContentfulRedis
 
       # decompress then use JSON.parse to remove any blank charactors to reduce bytesize
       # Even when we ask for Gzip encoding if content model is small contentfull wont gzib the response body
+      # 
+      # Futher storage optimizations can be made to reduce the total redis size.
       begin
         JSON.parse(Zlib::GzipReader.new(StringIO.new(res.body)).read).to_json
       rescue Zlib::GzipFile::Error
@@ -63,7 +65,7 @@ module ContentfulRedis
     end
 
     def faraday_connection
-      Faraday.new do |faraday|
+      ::Faraday.new do |faraday|
         faraday.request  :url_encoded
         faraday.response :logger do |logger|
           logger.filter(/(Authorization:)(.*)/, '\1[REMOVED]')
@@ -78,7 +80,7 @@ module ContentfulRedis
     end
 
     def catch_errors(res)
-      send("__#{res.status.to_s.first}00_error__") unless res.status == 200
+      send("__#{res.status.to_s[0]}00_error__") unless res.status == 200
     end
 
     def __400_error__

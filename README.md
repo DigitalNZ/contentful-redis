@@ -60,6 +60,18 @@ The model will connect to your
 Set up your redis configuration I recommend that you have a separate Redis database for all of your contentful data which has a namespace
 See [redis-store](https://github.com/redis-store/redis-store) for configuration details
 
+### Default env
+
+If unset the defalt call is to the `:published` data. however, setting default_env to `:preview` will request to the preview api.
+The Find methods can have an aditional argument to force non default endpoint.
+
+```ruby
+ContentfulRedis.configure do |config|
+  # if unset defaults to :published
+  config.default_env = :preview
+end
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

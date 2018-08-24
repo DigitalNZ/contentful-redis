@@ -4,11 +4,12 @@ require 'spec_helper'
 require 'support/setup'
 
 RSpec.describe ContentfulRedis::Glossary, vrc: true, contentful: true do
-  subject { ContentfulRedis::Glossary.new(Contentful::Page, :slug) }
+  let!(:test_class) { Page = Class.new(ContentfulRedis::ModelBase) }
+  subject { ContentfulRedis::Glossary.new(Page, :slug) }
 
   context 'initialize' do
     it 'references a klass' do
-      expect(subject.instance_variable_get(:@klass)).to eq Contentful::Page
+      expect(subject.instance_variable_get(:@klass)).to eq Page
     end
 
     it 'has an attribute' do

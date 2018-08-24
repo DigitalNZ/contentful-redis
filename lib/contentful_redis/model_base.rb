@@ -8,19 +8,20 @@ module ContentfulRedis
         ContentfulRedis.configuration.spaces.first[1]
       end
 
-      def find(id)
+      def find(id, env = ContentfulRedis.configuration.default_env || :published)
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters).call)
+        new(ContentfulRedis::Request.new(space, parameters, env).call)
       end
 
-      def find_by(args)
+      # TODO: Update the supported attributes
+      def find_by(args, env = ContentfulRedis.configuration.default_env || :published)
         raise ContentfulRedis::Error::ArgumentError, 'Only support slug option' if args.keys != [:slug]
 
         id = ContentfulRedis.configuration.redis.get(ContentfulRedis::KeyManager.attribute_glossary(self, args[:slug]))
-        raise ContentfulRedis::Error::RecordNotFound, 'Blank ID' if id.blank?
+        raise ContentfulRedis::Error::RecordNotFound, 'Blank ID' if id.nil?
 
-        find(id)
+        find(id, env)
       end
 
       def update_redis(id)
@@ -30,7 +31,7 @@ module ContentfulRedis
       def content_model
         model_name = name.demodulize
 
-        "#{model_name.first.downcase}#{model_name[1..-1]}"
+        "#{model_name[0].downcase}#{model_name[1..-1]}"
       end
     end
 
@@ -63,7 +64,7 @@ module ContentfulRedis
     def entries_as_objects(model)
       entries = model.dig('includes', 'Entry')
 
-      return {} if entries.blank?
+      return {} if entries.nil? || entries.empty?
 
       entries.each_with_object({}) do |entry, hash|
         type = entry.dig('sys', 'contentType', 'sys', 'id')
