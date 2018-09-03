@@ -39,18 +39,18 @@ RSpec.describe ContentfulRedis do
 
     it 'can configure content model module' do
       ContentfulRedis.configure do |config|
-        config.model_module = 'Contentful'
+        config.model_scope = 'Contentful'
       end
 
-      expect(ContentfulRedis.configuration.model_module).to eq 'Contentful::'
+      expect(ContentfulRedis.configuration.model_scope).to eq 'Contentful::'
     end
 
     it 'can configure deeper model modules' do
       ContentfulRedis.configure do |config|
-        config.model_module = 'Contentful::Model'
+        config.model_scope = 'Contentful::Model'
       end
 
-      expect(ContentfulRedis.configuration.model_module).to eq 'Contentful::Model::'
+      expect(ContentfulRedis.configuration.model_scope).to eq 'Contentful::Model::'
     end
   end
 end

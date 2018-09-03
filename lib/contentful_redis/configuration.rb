@@ -1,12 +1,12 @@
 module ContentfulRedis
   class Configuration
-    attr_writer :model_module
+    attr_writer :model_scope
     attr_accessor :spaces, :redis, :default_env
 
-    def model_module
-      return "#{@model_module}::" if @model_module != nil
+    def model_scope
+      return "#{@model_scope}::" if @model_scope != nil
 
-      nil
+      ''
     end
   end
 end

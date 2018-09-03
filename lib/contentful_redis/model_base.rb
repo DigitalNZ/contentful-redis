@@ -91,7 +91,7 @@ module ContentfulRedis
 
     def content_model_class(type)
       begin
-        "#{ContentfulRedis.configuration.model_module}#{type.classify}".constantize
+        "#{ContentfulRedis.configuration.model_scope}#{type.classify}".constantize
       rescue NameError
         raise ContentfulRedis::Error::ClassNotFound, "Content type: #{type} not defined, please define it"
       end

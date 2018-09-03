@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    contentful-redis-rb (0.0.1)
+    contentful-redis (0.0.1)
       faraday
       redis-store
 
@@ -54,7 +54,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler
-  contentful-redis-rb!
+  contentful-redis!
   factory_bot
   pry
   rake
