@@ -1,6 +1,18 @@
 # ContentfulRedis
 A light weight read only contentful api wrapper which caches your responses in redis.
 
+# Features
+- Lightweight easy to configure ruby contentful integration.
+- Faster load times due to having a redis cache.
+- All content models responses are cached.
+- Webhooks update
+- Multiple space support
+- Preview and production api support on a single environment
+
+## WIP
+- Better find_by support with automatic attribute mapping
+- Experiment redis size optimisation
+
 ContentfulRedis also supports multiple api endpoints(preview and published) within a single application.
 
 ## Installation
@@ -20,6 +32,31 @@ Or install it yourself as:
     $ gem install contentful-redis-rb
 
 ## Configuration
+
+Heres a default example, however, I will go over all of the individually configurations options below
+
+```ruby
+# config/initializers/contentful_redis.rb
+ContentfulRedis.configure do |config|
+  config.default_env = :preview # unless production env
+  config.model_scope = 'Contentful' # models live in a Contentful module
+
+  config.spaces = { 
+    test_space: {
+      id: 'xxxx',
+      access_token: 'xxxx',
+      preview_access_token: 'xxxx'
+    }
+  }
+
+  config.redis = Redis::Store.new(
+    host: (ENV['REDIS_HOST']) || 'localhost',
+    port: 6379,
+    db: 1,
+    namespace: 'contentful'
+  )
+
+```
 
 ### Spaces (required)
 Contentful Redis supports multiple space configurations with your first space being the default
@@ -42,42 +79,135 @@ ContentfulRedis.configure do |config|
   }
 ```
 
-To use a different space for a model set overwrite the space class level method in the model
+To use a different space for a model override the classes `#space` method
 
 ```ruby
 # app/models/my_model.rb
 class MyModel < ContentfulRedis::ModelBase
+  
+  # override default space
   def self.space
     ContentfulRedis.configuration.spaces[:test_space_2]
   end
 end
 ```
 
-The model will connect to your 
-
-### Redis Store (required)
-Set up your redis configuration I recommend that you have a separate Redis database for all of your contentful data which has a namespace
-See [redis-store](https://github.com/redis-store/redis-store) for configuration details
+### Redis (required)
+There are various ways you can integrate with Redis.
+I suggest using [redis-store](https://github.com/redis-store/redis-store) unless your application already has redis adapter installed.
+I recommend having a separate Redis database for all of your contentful data so that you can isolate your application Redis from your content.
 
 ```ruby
-config.redis = Redis::Store.new(
-  host: (ENV['REDIS_HOST']) || 'localhost',
-  port: 6379,
-  db: 1,
-  namespace: 'contentful'
-)
+# config/initializers/contentful_redis.rb
+ContentfulRedis.configure do |config|
+  config.redis = Redis::Store.new(
+    host: (ENV['REDIS_HOST']) || 'localhost',
+    port: 6379,
+    db: 1,
+    namespace: 'contentful'
+  )
+end
 ```
 
 ### Default env
 
-If unset the defalt call is to the `:published` data. however, setting default_env to `:preview` will request to the preview api.
-The Find methods can have an aditional argument to force non default endpoint.
+If unset the default call is to the `:published` data. however, setting default_env to `:preview` will request to the preview api.
+The Find methods can have an additional argument to force non default endpoint.
 
 ```ruby
+# config/initializers/contentful_redis.rb
 ContentfulRedis.configure do |config|
   # if unset defaults to :published
   config.default_env = :preview
 end
+```
+
+### Model scope
+Set the scope for where your models live.
+
+```ruby
+# config/initializers/contentful_redis.rb
+ContentfulRedis.configure do |config|
+  config.model_scope = 'Contentful'
+end
+
+# app/models/contentful/page.rb
+module Contentful
+  class Page < ContentfulRedis::ModelBase
+
+  end
+end
+```
+
+## Models
+
+All content models will need to be defined, prior to integation especially when using references.
+The example model we are going to define has a slug(input field) and a body(references other content models)
+
+```ruby
+# app/models/page.rb
+class Page < ContentfulRedis::ModelBase
+  # Set default readers which can return nil
+  attr_reader: :slug
+  
+  # define your desired return types manually
+  def body
+    @body || []
+  end
+end
+```
+
+### #find
+
+All content models are found by their contentful ID. Contentful Redis only stores only one cache of the content model
+This Redis key is generated and is unique to a content model, space and endpoint.
+
+```ruby
+  Contentful::Page.find('<contentful_uid>')
+```
+
+### #find_by(attribute: '')
+
+Contentful Redis does not store a duplicate object from searchable attributes,
+Instead it builds a glossary of searchable attributes mapping to their content models ids.
+
+When using a searchable fields you will need to build and manage the gloassary.
+Check out [how to seed searchable fields](#glossary-seeding) and [update content mdoels](#glossary-update) if you are using this feature.
+
+```ruby
+  Contentful::Page.find_by(slug: 'about-us') 
+```
+
+### Content model overriding
+
+Classes should match their content model name, however, if they don't you can override the classes `#name` method.
+
+```ruby
+# app/models/page.rb
+class Page < ContentfulRedis::ModelBase
+
+  # Overwrite to match contentful model using ruby class syntax
+  def self.name
+    'NameThatMatchesContentfulModel'
+  end
+end
+```
+
+## Attribute glossary
+# WIP: The glossay is a work in progress and will be tidied up in futher releases.
+
+### Seeding <a id='glossary-seeding'></a>
+
+The Glossary class will seed upto 1000 records of a specific type
+
+```ruby
+  ContentfulRedis::Glossary.new(<ContentModel>, :<attribute>)
+```
+
+### Update  <a id='glossary-update'></a>
+  Update from your controller using ...
+```ruby
+  
 ```
 
 ## Webhooks
@@ -88,7 +218,30 @@ See the [Contentful webhooks docs](https://www.contentful.com/developers/docs/co
 
 Examples bellow will get you started!
 
-### Rails
+Required Contentful webhooks to update the redis cache are:
+```json
+{
+  "id": "{ /payload/sys/id }",
+  "environment": "{ /payload/sys/environment/sys/id }",
+  "model": "{ /payload/sys/contentType/sys/id }"
+}
+```
+
+When pushing text attributes make sure you are using the correct language endpoint.
+```json
+{
+  ...
+  "title": "{ /payload/fields/title/en-US }",
+  "slug": "{ /payload/fields/slug/en-US }",
+  ...
+}
+```
+
+If you are using `find_by(<attribute_name>: '')` it is best to add them to the webhook as well.
+
+### Webhook Controllers
+
+#### Rails
 ```ruby
 # app/controllers/contentful/webhook_controller.rb
 module Contentful
@@ -98,8 +251,16 @@ module Contentful
     def update
       payload = JSON.parse request.raw_post
       
-      # TODO: Confirm method
-      <DynamicContentModel>.update(payload.fetch('id'))
+      contentful_model = ContentfulRedis::ClassFinder.search(payload['model'])
+      
+      # update model cache
+      contentful_model.update(id: payload['id'])
+
+      # update model searchable attributes
+      # TODO:
+
+
+      render json: { status: :ok }
     end
   end
 end
@@ -108,7 +269,7 @@ end
 post 'contentful/webhooks/update', as: :webhook_update
 ```
 
-### Other
+#### Other
 Feel free to create a PR for other ruby frameworks :)
 
 ## Development
@@ -118,7 +279,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/contentful-redis-rb.
+Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/contentful-redis.
 
 ## License
 
