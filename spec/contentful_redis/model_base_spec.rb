@@ -47,11 +47,5 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         ContentfulRedis::ModelBase.find_by(slug: 'not-a-record')
       end.to raise_error ContentfulRedis::Error::RecordNotFound
     end
-
-    it 'raises a ClassNotFound error when a unknown contentful class is referenced' do
-      expect do
-        subject.send(:content_model_class, 'unknownType')
-      end.to raise_error ContentfulRedis::Error::ClassNotFound
-    end
   end
 end

@@ -72,7 +72,7 @@ module ContentfulRedis
         type = entry.dig('sys', 'contentType', 'sys', 'id')
         id = entry.dig('sys', 'id')
 
-        hash[id] = content_model_class(type).find(id)
+        hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
       end
     end
 
@@ -86,14 +86,6 @@ module ContentfulRedis
         ContentfulRedis::Asset.new(asset)
       else
         value
-      end
-    end
-
-    def content_model_class(type)
-      begin
-        "#{ContentfulRedis.configuration.model_scope}#{type.classify}".constantize
-      rescue NameError
-        raise ContentfulRedis::Error::ClassNotFound, "Content type: #{type} not defined, please define it"
       end
     end
   end
