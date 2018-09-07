@@ -12,7 +12,7 @@ module ContentfulRedis
 
       def find_by(args, env = ContentfulRedis.configuration.default_env || :published)
         raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a decleared as a searchable fields" unless (args.keys - searchable_fields).empty?
-        
+
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_glossary(self, value)
           key.present? ? ContentfulRedis.redis.get(key) : nil
@@ -23,7 +23,7 @@ module ContentfulRedis
         find(id, env)
       end
 
-      def update(id , env = ContentfulRedis.configuration.default_env || :published)
+      def update(id, env = ContentfulRedis.configuration.default_env || :published)
         parameters = { 'sys.id': id, content_type: content_model }
 
         new(ContentfulRedis::Request.new(space, parameters, :update, env).call)
@@ -31,7 +31,7 @@ module ContentfulRedis
 
       def destroy(id, env = ContentfulRedis.configuration.default_env || :published)
         keys = []
-        keys << ContentfulRedis::KeyManager.content_model_key(space, env, { 'sys.id': id, content_type: content_model })
+        keys << ContentfulRedis::KeyManager.content_model_key(space, env, 'sys.id': id, content_type: content_model)
         searchable_fields.each do |field|
           keys << ContentfulRedis::KeyManager.attribute_glossary(self, field)
         end
@@ -54,7 +54,7 @@ module ContentfulRedis
       end
 
       def define_searchable_fields(*fields)
-        self.instance_eval("def searchable_fields; #{fields}; end")
+        instance_eval("def searchable_fields; #{fields}; end")
       end
     end
 
@@ -76,7 +76,7 @@ module ContentfulRedis
 
         instance_variable_set("@#{key.underscore}", value)
       end
-      
+
       create_searchable_attribute_links if self.class.searchable_fields.any?
     end
 
@@ -120,9 +120,9 @@ module ContentfulRedis
           raise ContentfulRedis::Error::ArgumentError, 'Searchable fields must be singular and cannot be references' if instance_attribute.is_a?(Array)
 
           key = ContentfulRedis::KeyManager.attribute_glossary(self.class, send(field))
-          return if ContentfulRedis.redis.exists(key)
+          next if ContentfulRedis.redis.exists(key)
           puts "Creating new key #{key}"
-          ContentfulRedis.redis.set(key, self.id)
+          ContentfulRedis.redis.set(key, id)
         rescue NoMethodError => _e
           raise ContentfulRedis::Error::ArgumentError, "Undefined attribute: #{field} when creating attribute glossary"
         end

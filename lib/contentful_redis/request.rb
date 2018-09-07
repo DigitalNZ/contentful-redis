@@ -26,7 +26,7 @@ module ContentfulRedis
 
       return fetch_from_origin(generated_key) if @action == :update || !ContentfulRedis.redis.exists(generated_key)
 
-      JSON.parse(ContentfulRedis.redis.get(generated_key)) 
+      JSON.parse(ContentfulRedis.redis.get(generated_key))
     end
 
     private
@@ -52,7 +52,7 @@ module ContentfulRedis
 
       # decompress then use JSON.parse to remove any blank charactors to reduce bytesize
       # Even when we ask for Gzip encoding if content model is small contentfull wont gzib the response body
-      # 
+      #
       # Futher storage optimizations can be made to reduce the total redis size.
       begin
         JSON.parse(Zlib::GzipReader.new(StringIO.new(res.body)).read).to_json
