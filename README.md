@@ -254,6 +254,25 @@ end
 #### Other
 Feel free to create a PR for other ruby frameworks :)
 
+## Content Seeding
+Seeding the data is a great way to get started in building your content models
+There is a couple of ways this can be done.
+
+Create a service object inside your application and get it to fetch the root pages of your content tree by their ID.
+The find method will build your Redis cache as well as link your content models with their searchable fields
+
+```ruby
+# app/services/seed_content.rb
+class SeedContent
+  # trigger a cascading content model seeding process
+  def call
+    ['list', 'of', 'contentful', 'ids'].each do |page|
+      Contentful::Page.find(page)
+    end
+  end
+end
+```
+
 ## Development
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
