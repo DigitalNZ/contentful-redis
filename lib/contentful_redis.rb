@@ -13,5 +13,9 @@ module ContentfulRedis
     def configure
       yield(configuration) if block_given?
     end
+
+    def redis
+      configuration.redis
+    end
   end
 end

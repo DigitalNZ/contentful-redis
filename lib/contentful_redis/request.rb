@@ -24,23 +24,19 @@ module ContentfulRedis
     def call
       generated_key = ContentfulRedis::KeyManager.content_model_key(@space, @endpoint, @parameters)
 
-      return fetch_from_origin(generated_key) if @action == :update || !redis.exists(generated_key)
+      return fetch_from_origin(generated_key) if @action == :update || !ContentfulRedis.redis.exists(generated_key)
 
-      JSON.parse(redis.get(generated_key)) 
+      JSON.parse(ContentfulRedis.redis.get(generated_key)) 
     end
 
     private
-
-    def redis
-      ContentfulRedis.configuration.redis
-    end
 
     def fetch_from_origin(generated_key)
       response = perform_request
 
       raise ContentfulRedis::Error::RecordNotFound, 'Contentful entry was not found' if response.match?(/"total":0/)
 
-      redis.set(generated_key, response)
+      ContentfulRedis.redis.set(generated_key, response)
 
       JSON.parse(response)
     end

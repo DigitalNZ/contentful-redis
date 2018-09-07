@@ -10,8 +10,11 @@ A light weight read only contentful api wrapper which caches your responses in r
 - Preview and production api support on a single environment
 
 ## WIP
-- Better find_by support with automatic attribute mapping
+- Migrate tests
+- logger
 - Experiment redis size optimisation
+- auto clean up of dead redis keys
+- code clean up
 
 ContentfulRedis also supports multiple api endpoints(preview and published) within a single application.
 
@@ -147,6 +150,9 @@ The example model we are going to define has a slug(input field) and a body(refe
 ```ruby
 # app/models/page.rb
 class Page < ContentfulRedis::ModelBase
+  # allows the field to be queried from
+  define_searchable_fields :slug
+
   # Set default readers which can return nil
   attr_reader: :slug
   
@@ -157,7 +163,7 @@ class Page < ContentfulRedis::ModelBase
 end
 ```
 
-### #find
+### Quirying
 
 All content models are found by their contentful ID. Contentful Redis only stores only one cache of the content model
 This Redis key is generated and is unique to a content model, space and endpoint.
@@ -166,13 +172,9 @@ This Redis key is generated and is unique to a content model, space and endpoint
   Contentful::Page.find('<contentful_uid>')
 ```
 
-### #find_by(attribute: '')
-
 Contentful Redis does not store a duplicate object from searchable attributes,
 Instead it builds a glossary of searchable attributes mapping to their content models ids.
-
-When using a searchable fields you will need to build and manage the gloassary.
-Check out [how to seed searchable fields](#glossary-seeding) and [update content mdoels](#glossary-update) if you are using this feature.
+These attributes are defined in the class decloration as `define_searchable_fields :slug`
 
 ```ruby
   Contentful::Page.find_by(slug: 'about-us') 
@@ -193,27 +195,9 @@ class Page < ContentfulRedis::ModelBase
 end
 ```
 
-## Attribute glossary
-# WIP: The glossay is a work in progress and will be tidied up in futher releases.
-
-### Seeding <a id='glossary-seeding'></a>
-
-The Glossary class will seed upto 1000 records of a specific type
-
-```ruby
-  ContentfulRedis::Glossary.new(<ContentModel>, :<attribute>)
-```
-
-### Update  <a id='glossary-update'></a>
-  Update from your controller using ...
-```ruby
-  
-```
-
 ## Webhooks
 
 Instead of creating rails specific implementation it is up to the developers to create your controllers and manage your webhook into your applications.
-
 See the [Contentful webhooks docs](https://www.contentful.com/developers/docs/concepts/webhooks/) creating your own
 
 Examples bellow will get you started!
@@ -230,14 +214,10 @@ Required Contentful webhooks to update the redis cache are:
 When pushing text attributes make sure you are using the correct language endpoint.
 ```json
 {
-  ...
   "title": "{ /payload/fields/title/en-US }",
   "slug": "{ /payload/fields/slug/en-US }",
-  ...
 }
 ```
-
-If you are using `find_by(<attribute_name>: '')` it is best to add them to the webhook as well.
 
 ### Webhook Controllers
 
@@ -252,21 +232,23 @@ module Contentful
       payload = JSON.parse request.raw_post
       
       contentful_model = ContentfulRedis::ClassFinder.search(payload['model'])
-      
-      # update model cache
       contentful_model.update(id: payload['id'])
 
-      # update model searchable attributes
-      # TODO:
-
-
       render json: { status: :ok }
+    end
+
+    def delete
+      # TODO
     end
   end
 end
 
 # config/routes
-post 'contentful/webhooks/update', as: :webhook_update
+#...
+namespace :contentful do
+  resource 'webhooks', only: :update, :delete
+end
+# ...
 ```
 
 #### Other
