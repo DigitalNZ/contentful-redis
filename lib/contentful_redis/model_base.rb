@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+require_relative 'asset'
+require_relative 'request'
+require_relative 'key_manager'
+require_relative 'error'
+require_relative 'class_finder'
+
 # Base class for contentful redis intergation.
 module ContentfulRedis
   class ModelBase

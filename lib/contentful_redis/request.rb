@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require_relative 'key_manager'
+require_relative 'error'
+
 # Request from contentful api and store in redis.
 # Atempt to fetch response from redis before requesting to the contentful api
 module ContentfulRedis
