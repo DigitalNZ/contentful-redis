@@ -6,4 +6,4 @@ FactoryBot.define do
       new('items' => [{ 'sys' => { 'id' => 'xxx' }, 'fields' => [] }])
     end
   end
-en:
+end
