@@ -266,7 +266,7 @@ The find method will build your Redis cache as well as link your content models 
 class SeedContent
   # trigger a cascading content model seeding process
   def call
-    ['list', 'of', 'contentful', 'ids'].each do |page|
+    ['xxContentfulModelIdxx'].each do |page|
       Contentful::Page.find(page)
     end
   end
