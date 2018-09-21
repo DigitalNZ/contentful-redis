@@ -54,7 +54,7 @@ module ContentfulRedis
       catch_errors(res)
 
       # decompress then use JSON.parse to remove any blank charactors to reduce bytesize
-      # Even when we ask for Gzip encoding if content model is small contentfull wont gzib the response body
+      # Even when we ask for gzip encoding if content model is small contentfull wont gzib the response body
       #
       # Futher storage optimizations can be made to reduce the total redis size.
       begin

@@ -36,7 +36,7 @@ Or install it yourself as:
 
 ## Configuration
 
-Heres a default example, however, I will go over all of the individually configurations options below
+Heres a default example, however, I will go over all of the individual configurations options below
 
 ```ruby
 # config/initializers/contentful_redis.rb
@@ -115,7 +115,7 @@ end
 ### Default env
 
 If unset the default call is to the `:published` data. however, setting default_env to `:preview` will request to the preview api.
-The Find methods can have an additional argument to force non default endpoint.
+The Find methods can have an additional argument to force the non default endpoint.
 
 ```ruby
 # config/initializers/contentful_redis.rb
@@ -143,8 +143,7 @@ end
 ```
 
 ## Models
-
-All content models will need to be defined, prior to integation especially when using references.
+All content models will need to be defined, prior to integration especially when using references.
 The example model we are going to define has a slug(input field) and a body(references other content models)
 
 ```ruby
@@ -163,7 +162,7 @@ class Page < ContentfulRedis::ModelBase
 end
 ```
 
-### Quirying
+### Querying
 
 All content models are found by their contentful ID. Contentful Redis only stores only one cache of the content model
 This Redis key is generated and is unique to a content model, space and endpoint.

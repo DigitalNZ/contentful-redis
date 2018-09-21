@@ -10,14 +10,14 @@ require_relative 'class_finder'
 module ContentfulRedis
   class ModelBase
     class << self
-      def find(id, env = ContentfulRedis.configuration.default_env || :published)
+      def find(id, env = nil)
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters, :get, env).call)
+        new(ContentfulRedis::Request.new(space, parameters, :get, request_env(env)).call)
       end
 
       def find_by(args, env = ContentfulRedis.configuration.default_env || :published)
-        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a decleared as a searchable fields" unless (args.keys - searchable_fields).empty?
+        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - searchable_fields).empty?
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_glossary(self, value)
@@ -29,15 +29,15 @@ module ContentfulRedis
         find(id, env)
       end
 
-      def update(id, env = ContentfulRedis.configuration.default_env || :published)
+      def update(id, env = nil)
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters, :update, env).call)
+        new(ContentfulRedis::Request.new(space, parameters, :update, request_env(env)).call)
       end
 
-      def destroy(id, env = ContentfulRedis.configuration.default_env || :published)
+      def destroy(id, env = nil)
         keys = []
-        keys << ContentfulRedis::KeyManager.content_model_key(space, env, 'sys.id': id, content_type: content_model)
+        keys << ContentfulRedis::KeyManager.content_model_key(space, request_env(env), 'sys.id': id, content_type: content_model)
         searchable_fields.each do |field|
           keys << ContentfulRedis::KeyManager.attribute_glossary(self, field)
         end
@@ -61,6 +61,12 @@ module ContentfulRedis
 
       def define_searchable_fields(*fields)
         instance_eval("def searchable_fields; #{fields}; end")
+      end
+
+      private
+
+      def request_env(env)
+        env || ContentfulRedis.configuration.default_env || :published
       end
     end
 
