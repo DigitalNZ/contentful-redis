@@ -32,7 +32,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install contentful-redis-rb
+    $ gem install contentful_redis
 
 ## Configuration
 
