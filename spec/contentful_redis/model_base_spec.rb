@@ -23,6 +23,76 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
     it 'defines the find_by method' do
       expect(ContentfulRedis::ModelBase).to respond_to(:find_by)
     end
+
+    context '#request_env' do
+      it 'defaults to production if the env has not been set' do
+        ContentfulRedis.configure do |config|
+          config.default_env = nil
+        end
+
+        expect(ContentfulRedis::ModelBase.send(:request_env, nil)).to eq :published
+      end
+
+      it 'returns the contentful redis configuration value' do
+        ContentfulRedis.configure do |config|
+          config.default_env = :preview
+        end
+
+        expect(ContentfulRedis::ModelBase.send(:request_env, nil)).to eq ContentfulRedis.configuration.default_env
+      end
+
+      it 'can be overwritten to return the optinal env query parameter' do
+        ContentfulRedis.configure do |config|
+          config.default_env = :published
+        end
+
+        expect(ContentfulRedis::ModelBase.send(:request_env, :preview)).to eq :preview
+      end
+    end
+
+    context '#find' do
+      it 'can query by id'
+      it 'the default_env configuration endpoint can be over written'
+    end
+
+    context '#find_by' do
+      it 'can query by searchable attribute'
+      it 'the default_env configuration endpoint can be over written'
+      it 'throws an error when the query attribute is not a searchable attribute'
+    end
+
+    context '#update' do
+      it 'can trigger a redis update'
+      it 'the default_env configuration endpoint can be over written'
+    end
+
+    context '#delete' do
+      it 'can trigger a redis delete'
+      it 'the default_env configuration endpoint can be over written'
+    end
+
+    context '#space' do
+      it 'returns the default / first configured space'
+    end
+
+    context '#content_model' do
+      it 'translates the ruby call name to a `Contentful model` name' do
+        expect(subject.class.content_model).to eq 'modelBase'
+      end
+    end
+
+    context '#searchable_fields' do
+      it 'defaults to an empty array' do
+        expect(subject.class.searchable_fields).to eq []
+      end
+
+      context '#define_searchable_fields' do
+        it 'overwrites the searchable_fields' do
+          subject.class.define_searchable_fields(:slug)
+          expect(subject.class.searchable_fields).to eq [:slug]
+        end
+      end
+    end
   end
 
   context 'instance methods' do
