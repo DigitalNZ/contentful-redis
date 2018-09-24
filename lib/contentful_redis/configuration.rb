@@ -2,8 +2,6 @@
 
 module ContentfulRedis
   class Configuration
-    # TODO: logger
-
     attr_writer :model_scope
     attr_accessor :spaces, :redis, :default_env
 

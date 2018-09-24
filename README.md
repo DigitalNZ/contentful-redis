@@ -1,22 +1,22 @@
 # ContentfulRedis
-A light weight read only contentful api wrapper which caches your responses in redis.
+A lightweight read-only contentful API wrapper which caches your responses in red.
 
 # Features
 - Lightweight easy to configure ruby contentful integration.
-- Faster load times due to having a redis cache.
+- Faster load times due to having a Redis cache.
 - All content models responses are cached.
 - Webhooks update
 - Multiple space support
-- Preview and production api support on a single environment
+- Preview and production API support on a single environment
 
 ## WIP
 - Migrate tests
 - logger
-- Experiment redis size optimisation
-- auto clean up of dead redis keys
+- Experiment Redis size optimization
+- auto clean up of dead Redis keys
 - code clean up
 
-ContentfulRedis also supports multiple api endpoints(preview and published) within a single application.
+ContentfulRedis also supports multiple API endpoints(preview and published) within a single application.
 
 ## Installation
 Add this line to your application's Gemfile:
@@ -97,7 +97,7 @@ end
 
 ### Redis (required)
 There are various ways you can integrate with Redis.
-I suggest using [redis-store](https://github.com/redis-store/redis-store) unless your application already has redis adapter installed.
+I suggest using [redis-store](https://github.com/redis-store/redis-store) unless your application already has Redis adapter installed.
 I recommend having a separate Redis database for all of your contentful data so that you can isolate your application Redis from your content.
 
 ```ruby
@@ -114,8 +114,8 @@ end
 
 ### Default env
 
-If unset the default call is to the `:published` data. however, setting default_env to `:preview` will request to the preview api.
-The Find methods can have an additional argument to force the non default endpoint.
+If unset the default call is to the `:published` data. however, setting default_env to `:preview` will request to the preview API.
+The Find methods can have an additional argument to force the non-default endpoint.
 
 ```ruby
 # config/initializers/contentful_redis.rb
@@ -172,8 +172,8 @@ This Redis key is generated and is unique to a content model, space and endpoint
 ```
 
 Contentful Redis does not store a duplicate object from searchable attributes,
-Instead it builds a glossary of searchable attributes mapping to their content models ids.
-These attributes are defined in the class decloration as `define_searchable_fields :slug`
+Instead, it builds a glossary of searchable attributes mapping to their content models ids.
+These attributes are defined in the class declaration as `define_searchable_fields :slug`
 
 ```ruby
   Contentful::Page.find_by(slug: 'about-us') 
@@ -201,7 +201,7 @@ See the [Contentful webhooks docs](https://www.contentful.com/developers/docs/co
 
 Examples below will get you started!
 
-Required Contentful webhooks to update the redis cache are:
+Required Contentful webhooks to update the Redis cache are:
 ```json
 {
   "id": "{ /payload/sys/id }",
@@ -274,7 +274,7 @@ end
 ## Development
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a Git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 ## Contributing
 
