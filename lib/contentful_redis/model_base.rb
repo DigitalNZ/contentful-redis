@@ -21,7 +21,7 @@ module ContentfulRedis
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_glossary(self, value)
-          key.present? ? ContentfulRedis.redis.get(key) : nil
+          key&.empty? ? nil : ContentfulRedis.redis.get(key)
         end.compact.first
 
         raise ContentfulRedis::Error::RecordNotFound, 'Missing attribute in glossary' if id.nil?
@@ -38,6 +38,7 @@ module ContentfulRedis
       def destroy(id, env = nil)
         keys = []
         keys << ContentfulRedis::KeyManager.content_model_key(space, request_env(env), 'sys.id': id, content_type: content_model)
+
         searchable_fields.each do |field|
           keys << ContentfulRedis::KeyManager.attribute_glossary(self, field)
         end
@@ -126,18 +127,21 @@ module ContentfulRedis
 
     def create_searchable_attribute_links
       self.class.searchable_fields.each do |field|
+
         begin
           instance_attribute = send(field)
-          raise ContentfulRedis::Error::ArgumentError, 'Searchable fields cannot be blank and must be required' if instance_attribute.nil?
-          raise ContentfulRedis::Error::ArgumentError, 'Searchable fields must be singular and cannot be references' if instance_attribute.is_a?(Array)
-
-          key = ContentfulRedis::KeyManager.attribute_glossary(self.class, send(field))
-          next if ContentfulRedis.redis.exists(key)
-          puts "Creating new key #{key}"
-          ContentfulRedis.redis.set(key, id)
         rescue NoMethodError => _e
           raise ContentfulRedis::Error::ArgumentError, "Undefined attribute: #{field} when creating attribute glossary"
         end
+
+        raise ContentfulRedis::Error::ArgumentError, 'Searchable fields cannot be blank and must be required' if instance_attribute.nil?
+        raise ContentfulRedis::Error::ArgumentError, 'Searchable fields must be singular and cannot be references' if instance_attribute.is_a?(Array)
+
+        key = ContentfulRedis::KeyManager.attribute_glossary(self.class, send(field))
+        next if ContentfulRedis.redis.exists(key)
+        puts "Creating new key #{key}"
+
+        ContentfulRedis.redis.set(key, id)
       end
     end
   end
