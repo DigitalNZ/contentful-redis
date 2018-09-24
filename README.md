@@ -199,7 +199,7 @@ end
 Instead of creating rails specific implementation it is up to the developers to create your controllers and manage your webhook into your applications.
 See the [Contentful webhooks docs](https://www.contentful.com/developers/docs/concepts/webhooks/) creating your own
 
-Examples bellow will get you started!
+Examples below will get you started!
 
 Required Contentful webhooks to update the redis cache are:
 ```json
@@ -254,11 +254,10 @@ end
 Feel free to create a PR for other ruby frameworks :)
 
 ## Content Seeding
-Seeding the data is a great way to get started in building your content models
-There is a couple of ways this can be done.
+Seeding the data is a great way to get started in building your content models, there is a couple of ways this can be done.
 
 Create a service object inside your application and get it to fetch the root pages of your content tree by their ID.
-The find method will build your Redis cache as well as link your content models with their searchable fields
+The find method will build your Redis cache as well as link your content models with their searchable fields.
 
 ```ruby
 # app/services/seed_content.rb

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative 'contentful_redis/configuration'
 require_relative 'contentful_redis/model_base'
 

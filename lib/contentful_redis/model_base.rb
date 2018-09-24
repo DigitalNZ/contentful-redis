@@ -127,7 +127,6 @@ module ContentfulRedis
 
     def create_searchable_attribute_links
       self.class.searchable_fields.each do |field|
-
         begin
           instance_attribute = send(field)
         rescue NoMethodError => _e
@@ -139,6 +138,7 @@ module ContentfulRedis
 
         key = ContentfulRedis::KeyManager.attribute_glossary(self.class, send(field))
         next if ContentfulRedis.redis.exists(key)
+
         puts "Creating new key #{key}"
 
         ContentfulRedis.redis.set(key, id)
