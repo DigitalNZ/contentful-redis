@@ -5,7 +5,7 @@ require 'support/setup'
 
 RSpec.describe ContentfulRedis::Request, contentful: true do
   let(:space) { ContentfulRedis::ModelBase.space }
-  let(:request_class) { build(:contentful_redis_request) }
+  let(:request_class) { build(:request) }
 
   context 'initalize' do
     it "sets it's space" do
@@ -13,7 +13,7 @@ RSpec.describe ContentfulRedis::Request, contentful: true do
     end
 
     it "sets it's endpoint" do
-      expect(request_class.instance_variable_get('@endpoint')).to eq 'preview'
+      expect(request_class.instance_variable_get('@endpoint')).to eq 'cdn'
     end
 
     it "sets it's access_token" do
@@ -21,11 +21,7 @@ RSpec.describe ContentfulRedis::Request, contentful: true do
     end
 
     it "sets it's parameters" do
-      expect(request_class.instance_variable_get('@parameters')).to eq("sys.id": 'xxxx', content_type: 'page', include: 1)
-    end
-
-    it 'sets it the include parameter' do
-      expect(request_class.instance_variable_get('@parameters')[:include]).to be_present
+      expect(request_class.instance_variable_get('@parameters')).to eq("sys.id": 'XXXX', content_type: 'page', include: 1)
     end
   end
 
