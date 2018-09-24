@@ -7,6 +7,8 @@ AllCops:
     - 'Gemfile.lock'
 Documentation:
   Enabled: false
+Metrics/ClassLength:
+  Max: 150
 Metrics/LineLength:
   Max: 175
   Exclude:
@@ -31,4 +33,8 @@ Lint/ReturnInVoidContext:
 Performance/Casecmp:
   Enabled: false
 Style/EvalWithLocation:
+  Enabled: false
+Style/IfUnlessModifier:
+  Enabled: false
+Style/RedundantFreeze:
   Enabled: false

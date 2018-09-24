@@ -21,7 +21,7 @@ module ContentfulRedis
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_glossary(self, value)
-          key&.empty? ? nil : ContentfulRedis.redis.get(key)
+          key.nil? || key.empty? ? nil : ContentfulRedis.redis.get(key)
         end.compact.first
 
         raise ContentfulRedis::Error::RecordNotFound, 'Missing attribute in glossary' if id.nil?
@@ -114,11 +114,15 @@ module ContentfulRedis
 
     def extract_object_from_hash(model, value, entries)
       entry_id = value.dig('sys', 'id')
-      asset = model.dig('includes', 'Asset')&.first
+
+      assets = model.dig('includes', 'Asset')
+      asset = if !assets.nil? && assets.is_a?(Array)
+                model.dig('includes', 'Asset').first
+              end
 
       if entries.key?(entry_id)
         entries[entry_id]
-      elsif asset.present?
+      elsif !asset.nil?
         ContentfulRedis::Asset.new(asset)
       else
         value
