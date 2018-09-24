@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 ContentfulRedis.configure do |config|
   config.redis = Redis::Store.new(host: (ENV['REDIS_HOST']) || 'localhost', port: 6379, db: 1, namespace: 'contentful')
-  config.spaces = { 
+  config.spaces = {
     test_space: {
       space_id: 'xxxx',
       access_token: 'xxxx',

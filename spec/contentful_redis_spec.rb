@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 RSpec.describe ContentfulRedis do
-  it "has a version number" do
+  it 'has a version number' do
     expect(ContentfulRedis::VERSION).not_to be nil
   end
 
   describe 'configuration' do
     let(:space_config) do
-      { 
+      {
         test_space: {
           id: 'xxxx',
           access_token: 'xxxx',
@@ -18,7 +20,7 @@ RSpec.describe ContentfulRedis do
       ContentfulRedis.configure do |config|
         config.spaces = space_config
       end
-      
+
       expect(ContentfulRedis.configuration.spaces).to eq space_config
     end
 
@@ -28,7 +30,7 @@ RSpec.describe ContentfulRedis do
           host: (ENV['REDIS_HOST']) || 'localhost',
           port: 6379,
           db:   1,
-          namespace: 'contentful_redis',
+          namespace: 'contentful_redis'
         )
       end
       expect(ContentfulRedis.configuration.redis).to be_a(Redis)
