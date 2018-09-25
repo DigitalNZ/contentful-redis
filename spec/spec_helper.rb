@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'contentful_redis'
 require 'pry'
 require 'faraday'
+require 'webmock/rspec'
 require 'redis-store'
 
 require 'support/factory_bot'

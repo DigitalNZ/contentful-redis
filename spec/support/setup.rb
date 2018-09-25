@@ -15,6 +15,4 @@ ContentfulRedis.configure do |config|
       preview_access_token: 'xxxx'
     }
   }
-
-  config.default_env = :preview
 end

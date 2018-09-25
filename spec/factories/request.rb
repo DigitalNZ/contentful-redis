@@ -3,7 +3,19 @@
 FactoryBot.define do
   factory :request, class: ContentfulRedis::Request do
     initialize_with do
-      new(ContentfulRedis::ModelBase.space, "sys.id": 'XXXX', content_type: 'page')
+      new({ space_id: 'xxxx', access_token: 'xxxx', preview_access_token: 'xxxx' }, "sys.id": 'XXXX', content_type: 'page')
+    end
+
+    trait :update do
+      initialize_with do
+        new({ space_id: 'xxxx', access_token: 'xxxx', preview_access_token: 'xxxx' }, { "sys.id": 'XXXX', content_type: 'page' }, :update)
+      end
+    end
+
+    trait :preview do
+      initialize_with do
+        new({ space_id: 'xxxx', access_token: 'xxxx', preview_access_token: 'xxxx' }, { "sys.id": 'XXXX', content_type: 'page' }, :get, :preview)
+      end
     end
 
     trait :as_response do
