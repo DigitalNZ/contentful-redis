@@ -1,5 +1,5 @@
 # ContentfulRedis
-A lightweight read-only contentful API wrapper which caches your responses in red.
+A lightweight read-only contentful API wrapper which caches your responses in Redis.
 
 # Features
 - Lightweight easy to configure ruby contentful integration.
@@ -231,13 +231,18 @@ module Contentful
       payload = JSON.parse request.raw_post
       
       contentful_model = ContentfulRedis::ClassFinder.search(payload['model'])
-      contentful_model.update(id: payload['id'])
+      contentful_model.update(payload['id'])
 
       render json: { status: :ok }
     end
 
     def delete
-      # TODO
+      payload = JSON.parse request.raw_post
+      
+      contentful_model = ContentfulRedis::ClassFinder.search(payload['model'])
+      contentful_model.destroy(payload['id'])
+
+      render json: { status: :ok }
     end
   end
 end
