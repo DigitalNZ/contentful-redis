@@ -4,7 +4,7 @@ module ContentfulRedis
   module KeyManager
     class << self
       # Links a contentful models attribute to its contentful_id
-      def attribute_glossary(klass, attribute)
+      def attribute_index(klass, attribute)
         "#{klass.space.fetch(:space_id)}/#{klass.content_model}/#{attribute}"
       end
 

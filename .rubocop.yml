@@ -24,8 +24,6 @@ Style/SymbolArray:
   Enabled: false
 Style/WordArray:
   Enabled: false
-Style/GlobalVars:
-  Enabled: false
 Style/RedundantBegin:
   Enabled: false
 Lint/ReturnInVoidContext:

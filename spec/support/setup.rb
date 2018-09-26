@@ -15,4 +15,6 @@ ContentfulRedis.configure do |config|
       preview_access_token: 'xxxx'
     }
   }
+
+  config.logging = false
 end

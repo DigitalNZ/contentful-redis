@@ -20,7 +20,7 @@ module ContentfulRedis
         raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - searchable_fields).empty?
 
         id = args.values.map do |value|
-          key = ContentfulRedis::KeyManager.attribute_glossary(self, value)
+          key = ContentfulRedis::KeyManager.attribute_index(self, value)
           key.nil? || key.empty? ? nil : ContentfulRedis.redis.get(key)
         end.compact.first
 
@@ -40,7 +40,7 @@ module ContentfulRedis
         keys << ContentfulRedis::KeyManager.content_model_key(space, request_env(env), 'sys.id': id, content_type: content_model)
 
         searchable_fields.each do |field|
-          keys << ContentfulRedis::KeyManager.attribute_glossary(self, field)
+          keys << ContentfulRedis::KeyManager.attribute_index(self, field)
         end
 
         ContentfulRedis.redis.del(*keys)
@@ -140,10 +140,8 @@ module ContentfulRedis
         raise ContentfulRedis::Error::ArgumentError, 'Searchable fields cannot be blank and must be required' if instance_attribute.nil?
         raise ContentfulRedis::Error::ArgumentError, 'Searchable fields must be singular and cannot be references' if instance_attribute.is_a?(Array)
 
-        key = ContentfulRedis::KeyManager.attribute_glossary(self.class, send(field))
+        key = ContentfulRedis::KeyManager.attribute_index(self.class, send(field))
         next if ContentfulRedis.redis.exists(key)
-
-        puts "Creating new key #{key}"
 
         ContentfulRedis.redis.set(key, id)
       end

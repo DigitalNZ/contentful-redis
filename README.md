@@ -43,6 +43,7 @@ Heres a default example, however, I will go over all of the individual configura
 ContentfulRedis.configure do |config|
   config.default_env = :preview # unless production env
   config.model_scope = 'Contentful' # models live in a Contentful module
+  config.logging = true
 
   config.spaces = { 
     test_space: {

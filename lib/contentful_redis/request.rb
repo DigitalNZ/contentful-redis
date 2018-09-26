@@ -66,10 +66,14 @@ module ContentfulRedis
 
     def faraday_connection
       ::Faraday.new do |faraday|
-        faraday.request  :url_encoded
-        faraday.response :logger do |logger|
-          logger.filter(/(Authorization:)(.*)/, '\1[REMOVED]')
+        faraday.request :url_encoded
+
+        if ContentfulRedis.configuration.logging
+          faraday.response :logger do |logger|
+            logger.filter(/(Authorization:)(.*)/, '\1[REMOVED]')
+          end
         end
+
         faraday.adapter Faraday.default_adapter
         faraday.headers = {
           'Authorization': "Bearer #{@access_token}",

@@ -156,7 +156,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
     end
 
     context '#space' do
-      it 'returns the default / first configured space' do
+      it 'returns the default(first) configured space' do
         expect(ContentfulRedis::ModelBase.space).to eq(access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx')
       end
     end
