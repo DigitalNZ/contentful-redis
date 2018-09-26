@@ -1,0 +1,38 @@
+AllCops:
+  DisplayStyleGuide: true
+  DisplayCopNames: true
+  Exclude:
+    - 'bin/**/*'
+    - 'Gemfile'
+    - 'Gemfile.lock'
+Documentation:
+  Enabled: false
+Metrics/ClassLength:
+  Max: 150
+Metrics/LineLength:
+  Max: 175
+  Exclude:
+    - 'spec/**/*'
+Metrics/MethodLength:
+  Max: 25
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+Metrics/AbcSize:
+  Max: 25
+Style/SymbolArray:
+  Enabled: false
+Style/WordArray:
+  Enabled: false
+Style/RedundantBegin:
+  Enabled: false
+Lint/ReturnInVoidContext:
+  Enabled: false 
+Performance/Casecmp:
+  Enabled: false
+Style/EvalWithLocation:
+  Enabled: false
+Style/IfUnlessModifier:
+  Enabled: false
+Style/RedundantFreeze:
+  Enabled: false
