@@ -80,7 +80,7 @@ module ContentfulRedis
       model['items'].first['fields'].each do |key, value|
         value = case value
                 when Array
-                  value.map { |val| entries[val.dig('sys', 'id')] || val }
+                  value.map { |val| entries[val.dig('sys', 'id')] }.compact
                 when Hash
                   extract_object_from_hash(model, value, entries)
                 else
