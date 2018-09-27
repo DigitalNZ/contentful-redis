@@ -4,8 +4,6 @@ rvm:
   - 2.5.0
 services:
   - redis-server
-before_install: 
-  - gem install bundler
 script:
   - bundle exec rspec
   - bundle exec rubocop lib/ spec/
