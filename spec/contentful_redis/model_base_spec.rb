@@ -134,6 +134,23 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
       end
     end
 
+    context '#update_all' do
+      let(:get_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', limit: 1 }, :get, :published] }
+      let(:update_entry_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', 'sys.id': 'xxx' }, :update, :published] }
+
+      it 'calls get request for model twice to fetch data and updates entry' do
+        expect(ContentfulRedis::Request).to receive(:new)
+          .with(*get_params)
+          .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response))).twice
+
+        expect(ContentfulRedis::Request).to receive(:new)
+          .with(*update_entry_params)
+          .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response))).once
+
+        ContentfulRedis::ModelBase.update_all
+      end
+    end
+
     context '#delete' do
       let(:expected_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', "sys.id": 'xxx' }, :update, :published] }
       let(:preview_record_key) { 'xxxx/preview/sys.id-xxx/content_type-modelBase' }

@@ -8,7 +8,6 @@ ContentfulRedis.configure do |config|
       access_token: 'xxxx',
       preview_access_token: 'xxxx'
     },
-
     test_space_2: {
       space_id: 'xxxy',
       access_token: 'xxxx',

@@ -11,6 +11,7 @@ RSpec.describe ContentfulRedis::Request, contentful: true do
     stub_request(:get, 'https://cdn.contentful.com/spaces/xxxx/environments/master/entries?content_type=page&include=1&sys.id=XXXX')
       .to_return(status: 200, body: build(:request, :as_response).to_json, headers: {})
   end
+
   context 'initalize' do
     it "sets it's space" do
       expect(request_class.instance_variable_get('@space')).to eq space

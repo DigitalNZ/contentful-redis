@@ -35,6 +35,17 @@ module ContentfulRedis
         new(ContentfulRedis::Request.new(space, parameters, :update, request_env(env)).call)
       end
 
+      def update_all(env = nil)
+        parameters = { limit: 1, content_type: content_model }
+        # This call returns one record with basic info of the model
+        # including the total number of entries
+        model_content = ContentfulRedis::Request.new(space, parameters, :get, request_env(env)).call
+        parameters[:limit] = model_content['total']
+
+        entries = ContentfulRedis::Request.new(space, parameters, :get, request_env(env)).call
+        entries['items'].each { |item| update(item.dig('sys', 'id')) }
+      end
+
       def destroy(id, env = nil)
         keys = []
         keys << ContentfulRedis::KeyManager.content_model_key(space, request_env(env), 'sys.id': id, content_type: content_model)
