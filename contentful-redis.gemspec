@@ -7,7 +7,7 @@ require 'contentful_redis'
 Gem::Specification.new do |spec|
   spec.name          = 'contentful_redis'
   spec.version       = ContentfulRedis::VERSION
-  spec.authors       = ['DanHenton']
+  spec.authors       = ['DanHenton', 'Edwin Rozario']
   spec.email         = ['Dan.Henton@gmail.com']
 
   spec.summary       = 'Contentful api wrapper which caches responses from contentful'
