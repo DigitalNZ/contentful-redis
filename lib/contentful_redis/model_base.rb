@@ -36,14 +36,7 @@ module ContentfulRedis
       end
 
       def destroy(id, env = nil)
-        keys = []
-        keys << ContentfulRedis::KeyManager.content_model_key(space, request_env(env), 'sys.id': id, content_type: content_model)
-
-        searchable_fields.each do |field|
-          keys << ContentfulRedis::KeyManager.attribute_index(self, field)
-        end
-
-        ContentfulRedis.redis.del(*keys)
+        find(id, env).destroy
       end
 
       def space
@@ -91,6 +84,17 @@ module ContentfulRedis
       end
 
       create_searchable_attribute_links if self.class.searchable_fields.any?
+    end
+
+    def destroy
+      keys = [ContentfulRedis::KeyManager.content_model_key(self.class.space, self.class.send(:request_env, nil),
+                                                            'sys.id': id, content_type: content_type, include: 1)]
+
+      self.class.send(:searchable_fields).each do |field|
+        keys << ContentfulRedis::KeyManager.attribute_index(self.class, send(field.to_sym))
+      end
+
+      ContentfulRedis.redis.del(*keys)
     end
 
     def content_type
