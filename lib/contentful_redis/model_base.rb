@@ -35,6 +35,10 @@ module ContentfulRedis
         new(ContentfulRedis::Request.new(space, parameters, :update, request_env(env)).call)
       end
 
+      def destroy(id, env = nil)
+        find(id, env).destroy
+      end
+
       def space
         ContentfulRedis.configuration.spaces.first[1]
       end

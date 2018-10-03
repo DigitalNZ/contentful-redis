@@ -7,7 +7,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
   subject { build(:content_model) }
 
   context 'class level methods' do
-    context '#request_env' do
+    describe '#request_env' do
       it 'defaults to production if the env has not been set' do
         ContentfulRedis.configure do |config|
           config.default_env = nil
@@ -33,7 +33,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
       end
     end
 
-    context '#find' do
+    describe '#find(id)' do
       let(:expected_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', "sys.id": 'xxx' }, :get, :published] }
 
       it 'can query by id' do
@@ -63,7 +63,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
       end
     end
 
-    context '#find_by' do
+    describe '#find_by' do
       let(:expected_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', "sys.id": 'xxx' }, :get, :published] }
       let(:glossary_key) { 'xxxx/modelBase/xxx' }
 
@@ -107,7 +107,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
       end
     end
 
-    context '#update' do
+    describe '#update(id)' do
       let(:expected_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', "sys.id": 'xxx' }, :update, :published] }
 
       it 'can trigger a redis update' do
@@ -134,19 +134,52 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
       end
     end
 
-    context '#space' do
+    describe '#destroy(id)' do
+      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.content_type}/include-1" }
+      # Simulating id to be a searchable field
+      let(:attribute_index_key) { "xxxx/#{subject.class.content_model}/#{subject.id}" }
+
+      before do
+        ContentfulRedis.redis.set(content_model_key, 1)
+        ContentfulRedis.redis.set(attribute_index_key, 1)
+        allow(subject.class).to receive(:searchable_fields).and_return(['id'])
+        allow(ContentfulRedis::ModelBase).to receive(:find).and_return(subject)
+      end
+
+      it 'returns the number of redis keys deleted' do
+        expect(ContentfulRedis::ModelBase.destroy(subject.id)).to eq 2
+      end
+
+      it 'deletes content_model_key (find key)' do
+        expect(ContentfulRedis.redis.exists(content_model_key)).to be true
+
+        ContentfulRedis::ModelBase.destroy(subject.id)
+
+        expect(ContentfulRedis.redis.exists(content_model_key)).to be false
+      end
+
+      it 'deletes attribute_index keys (search keys)' do
+        expect(ContentfulRedis.redis.exists(attribute_index_key)).to be true
+
+        ContentfulRedis::ModelBase.destroy(subject.id)
+
+        expect(ContentfulRedis.redis.exists(attribute_index_key)).to be false
+      end
+    end
+
+    describe '#space' do
       it 'returns the default(first) configured space' do
         expect(ContentfulRedis::ModelBase.space).to eq(access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx')
       end
     end
 
-    context '#content_model' do
+    describe '#content_model' do
       it 'translates the ruby call name to a `Contentful model` name' do
         expect(subject.class.content_model).to eq 'modelBase'
       end
     end
 
-    context '#searchable_fields' do
+    describe '#searchable_fields' do
       it 'defaults to an empty array' do
         expect(subject.class.searchable_fields).to eq []
       end

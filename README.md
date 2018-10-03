@@ -180,7 +180,13 @@ These attributes are defined in the class declaration as `define_searchable_fiel
   Contentful::Page.find_by(slug: 'about-us') 
 ```
 
-Deleting an entry is done by calling destroy on a ContentfulRedis model object. This will delete all the redis keys find and search keys for the entry.
+Deleting an entry is done by calling destroy on a ContentfulRedis model object or destroy by passing id. This will delete all the redis keys, find and search keys for the entry.
+
+```ruby
+  Contentful::Page.destroy('<contentful_uid>')
+```
+
+or
 
 ```ruby
   page = Contentful::Page.find('<contentful_uid>')
