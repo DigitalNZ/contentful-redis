@@ -135,7 +135,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
     end
 
     describe '#destroy(id)' do
-      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.content_type}/include-1" }
+      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.class.content_model}/include-1" }
       # Simulating id to be a searchable field
       let(:attribute_index_key) { "xxxx/#{subject.class.content_model}/#{subject.id}" }
 
@@ -203,7 +203,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
     end
 
     describe '#destroy' do
-      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.content_type}/include-1" }
+      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.class.content_model}/include-1" }
       # Simulating id to be a searchable field
       let(:attribute_index_key) { "xxxx/#{subject.class.content_model}/#{subject.id}" }
 
