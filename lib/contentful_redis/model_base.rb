@@ -88,7 +88,8 @@ module ContentfulRedis
 
     def destroy
       keys = [ContentfulRedis::KeyManager.content_model_key(self.class.space, self.class.send(:request_env, nil),
-                                                            'sys.id': id, content_type: content_type, include: 1)]
+                                                            'sys.id': id, content_type: self.class.content_model,
+                                                            include: 1)]
 
       self.class.send(:searchable_fields).each do |field|
         keys << ContentfulRedis::KeyManager.attribute_index(self.class, send(field.to_sym))
