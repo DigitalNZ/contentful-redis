@@ -11,6 +11,8 @@ module ContentfulRedis
   class ModelBase
     class << self
       def find(id, env = nil)
+        raise ContentfulRedis::Error::ArgumentError, 'Expected Contentful model ID' unless id.is_a?(String)
+
         parameters = { 'sys.id': id, content_type: content_model }
 
         new(ContentfulRedis::Request.new(space, parameters, :get, request_env(env)).call)
