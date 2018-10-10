@@ -82,7 +82,7 @@ module ContentfulRedis
                   value
                 end
 
-        instance_variable_set("@#{key.underscore}", value)
+        instance_variable_set("@#{key.underscore}", value) unless value.nil?
       end
 
       create_searchable_attribute_links if self.class.searchable_fields.any?
@@ -138,7 +138,15 @@ module ContentfulRedis
       elsif !asset.nil?
         ContentfulRedis::Asset.new(asset)
       else
-        value
+        if value.is_a?(Hash)
+          # dissolve Contentful api errors
+          error_ids = model.fetch('errors', []).map{ |error| error.dig('details', 'id') }
+          return if error_ids.any? && error_ids.include?(value.dig('sys', 'id'))
+
+          value
+        else
+          value
+        end
       end
     end
 
