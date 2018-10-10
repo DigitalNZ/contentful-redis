@@ -87,7 +87,7 @@ module ContentfulRedis
     end
 
     def destroy
-      keys = [ContentfulRedis::KeyManager.content_model_key(self.class.space, self.class.send(:request_env, nil),
+      keys = [ContentfulRedis::KeyManager.content_model_key(self.class.space, endpoint,
                                                             'sys.id': id, content_type: self.class.content_model,
                                                             include: 1)]
 
@@ -103,6 +103,12 @@ module ContentfulRedis
     end
 
     private
+
+    def endpoint
+      env = self.class.send(:request_env, nil)
+
+      env.to_s.downcase == 'published' ? 'cdn' : 'preview'
+    end
 
     def entries_as_objects(model)
       entries = model.dig('includes', 'Entry')
