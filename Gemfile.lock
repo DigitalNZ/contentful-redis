@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    contentful_redis (0.0.4)
+    contentful_redis (0.0.5)
       faraday
       redis-store
 

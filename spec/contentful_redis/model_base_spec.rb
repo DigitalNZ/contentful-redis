@@ -135,7 +135,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
     end
 
     describe '#destroy(id)' do
-      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.class.content_model}/include-1" }
+      let(:content_model_key) { "xxxx/cdn/sys.id-#{subject.id}/content_type-#{subject.class.content_model}/include-1" }
       # Simulating id to be a searchable field
       let(:attribute_index_key) { "xxxx/#{subject.class.content_model}/#{subject.id}" }
 
@@ -203,7 +203,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
     end
 
     describe '#destroy' do
-      let(:content_model_key) { "xxxx/published/sys.id-#{subject.id}/content_type-#{subject.class.content_model}/include-1" }
+      let(:content_model_key) { "xxxx/cdn/sys.id-#{subject.id}/content_type-#{subject.class.content_model}/include-1" }
       # Simulating id to be a searchable field
       let(:attribute_index_key) { "xxxx/#{subject.class.content_model}/#{subject.id}" }
 
@@ -231,6 +231,22 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         subject.destroy
 
         expect(ContentfulRedis.redis.exists(attribute_index_key)).to be false
+      end
+    end
+  end
+
+  describe '#endpoint' do
+    context 'when environment for is published' do
+      it 'return endpoint for the environment' do
+        expect(subject.send(:endpoint)).to eq 'cdn'
+      end
+    end
+
+    context 'when environment for is preview' do
+      it 'return endpoint for the environment' do
+        allow(subject.class).to receive(:request_env).and_return(:preview)
+
+        expect(subject.send(:endpoint)).to eq 'preview'
       end
     end
   end
