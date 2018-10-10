@@ -257,5 +257,11 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         ContentfulRedis::ModelBase.find_by(error: '')
       end.to raise_error ContentfulRedis::Error::ArgumentError
     end
+
+    it 'raises a ArgumentError when #find is called without a string id' do
+      expect do
+        ContentfulRedis::ModelBase.find(id: 'xxxx')
+      end.to raise_error ContentfulRedis::Error::ArgumentError
+    end
   end
 end
