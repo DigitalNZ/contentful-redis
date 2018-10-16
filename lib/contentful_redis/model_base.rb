@@ -9,6 +9,8 @@ require_relative 'class_finder'
 # Base class for contentful redis intergation.
 module ContentfulRedis
   class ModelBase
+    attr_accessor :id, :errors
+
     class << self
       def find(id, env = nil)
         raise ContentfulRedis::Error::ArgumentError, 'Expected Contentful model ID' unless id.is_a?(String)
@@ -67,8 +69,8 @@ module ContentfulRedis
     end
 
     def initialize(model)
-      instance_variable_set(:@id, model['items'].first.dig('sys', 'id'))
-      self.class.send(:attr_reader, :id)
+      @id = model['items'].first.dig('sys', 'id')
+      @errors = model['errors'].nil? ? [] : model['errors'].map{ |error| error.dig('details', 'id') }
 
       entries = entries_as_objects(model)
 
@@ -89,9 +91,14 @@ module ContentfulRedis
     end
 
     def destroy
-      keys = [ContentfulRedis::KeyManager.content_model_key(self.class.space, endpoint,
-                                                            'sys.id': id, content_type: self.class.content_model,
-                                                            include: 1)]
+      keys = [
+        ContentfulRedis::KeyManager.content_model_key(
+          self.class.space,
+          endpoint,
+          'sys.id': id,
+          content_type: self.class.content_model,
+          include: 1)
+      ]
 
       self.class.send(:searchable_fields).each do |field|
         keys << ContentfulRedis::KeyManager.attribute_index(self.class, send(field.to_sym))
@@ -120,9 +127,14 @@ module ContentfulRedis
       entries.each_with_object({}) do |entry, hash|
         type = entry.dig('sys', 'contentType', 'sys', 'id')
         id = entry.dig('sys', 'id')
-
-        hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
-      end
+        
+        # Catch references to deleted or archived content.
+        begin
+          hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
+        rescue ContentfulRedis::Error::RecordNotFound => _e
+          next
+        end
+      end.compact
     end
 
     def extract_object_from_hash(model, value, entries)
@@ -139,7 +151,8 @@ module ContentfulRedis
         ContentfulRedis::Asset.new(asset)
       else
         if value.is_a?(Hash)
-          # dissolve Contentful api errors
+          # TODO: This might be better fitted in the entries_as_objects method instead
+          # Ignore objects which have a Contentful error. 
           error_ids = model.fetch('errors', []).map{ |error| error.dig('details', 'id') }
           return if error_ids.any? && error_ids.include?(value.dig('sys', 'id'))
 
