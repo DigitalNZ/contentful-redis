@@ -12,16 +12,16 @@ module ContentfulRedis
     attr_accessor :id
 
     class << self
-      def find(id, env = nil)
+      def find(id, options = {})
         raise ContentfulRedis::Error::ArgumentError, 'Expected Contentful model ID' unless id.is_a?(String)
 
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters, :get, request_env(env)).call)
+        new(ContentfulRedis::Request.new(space, parameters, :get, request_env(options[:env])).call, options)
       end
 
-      def find_by(args, env = ContentfulRedis.configuration.default_env || :published)
-        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - searchable_fields).empty?
+      def find_by(args = {}) # env = ContentfulRedis.configuration.default_env || :published)
+        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - (searchable_fields + [:options])).empty?
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_index(self, value)
@@ -30,17 +30,17 @@ module ContentfulRedis
 
         raise ContentfulRedis::Error::RecordNotFound, 'Missing attribute in glossary' if id.nil?
 
-        find(id, env)
+        find(id, args.fetch(:options, {}))
       end
 
-      def update(id, env = nil)
+      def update(id, options = {})
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters, :update, request_env(env)).call)
+        new(ContentfulRedis::Request.new(space, parameters, :update, request_env(options[:env])).call)
       end
 
-      def destroy(id, env = nil)
-        find(id, env).destroy
+      def destroy(id, options = { } )
+        find(id, request_env[:env]).destroy
       end
 
       def space
@@ -64,18 +64,20 @@ module ContentfulRedis
       private
 
       def request_env(env)
-        env || ContentfulRedis.configuration.default_env || :published
+        env || ContentfulRedis.configuration.default_env || 'published'
       end
     end
 
-    def initialize(model)
+    def initialize(model, options = {})
       @id = model['items'].first.dig('sys', 'id')
 
-      entries = entries_as_objects(model)
+      entries = entries_as_objects(model, options)
 
       model['items'].first['fields'].each do |key, value|
         value = case value
                 when Array
+                  # Construct the referenced entries
+                  # They will not apear in the entries hash the attribute has been filtered out
                   value.map { |val| entries[val.dig('sys', 'id')] }.compact
                 when Hash
                   extract_object_from_hash(model, value, entries)
@@ -119,14 +121,25 @@ module ContentfulRedis
       env.to_s.downcase == 'published' ? 'cdn' : 'preview'
     end
 
-    def entries_as_objects(model)
+    def entries_as_objects(model, options)
       entries = model.dig('includes', 'Entry')
-
       return {} if entries.nil? || entries.empty?
+
+      ids_to_attribute = model.dig('items').first['fields'].each_with_object({}) do |(field, value), hash|
+        case value
+        when Array
+          value.each{ |v| hash[v.dig('sys', 'id')] = field }
+        when Hash
+          hash[value.dig('sys', 'id')] = field
+        end
+      end
 
       entries.each_with_object({}) do |entry, hash|
         type = entry.dig('sys', 'contentType', 'sys', 'id')
         id = entry.dig('sys', 'id')
+        attribute = ids_to_attribute[id]
+
+        next unless allow?(attribute, options)
 
         # Catch references to deleted or archived content.
         begin
@@ -135,6 +148,28 @@ module ContentfulRedis
           next
         end
       end.compact
+    end
+
+    def allow?(attribute, options)
+      if !options[:only].nil?
+        case options[:only]
+        when Array
+          return false unless options[:only].include?(attribute)
+        else
+          return false unless options[:only] == attribute
+        end
+      end
+
+      if !options[:except].nil?
+        case options[:except]
+        when Array
+          return false if options[:except].include?(attribute)
+        else
+          return false if options[:except] == attribute
+        end
+      end
+
+      true
     end
 
     def extract_object_from_hash(model, value, entries)
