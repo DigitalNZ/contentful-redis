@@ -70,7 +70,7 @@ module ContentfulRedis
 
     def initialize(model)
       @id = model['items'].first.dig('sys', 'id')
-      @errors = model['errors'].nil? ? [] : model['errors'].map{ |error| error.dig('details', 'id') }
+      @errors = model['errors'].nil? ? [] : model['errors'].map { |error| error.dig('details', 'id') }
 
       entries = entries_as_objects(model)
 
@@ -97,7 +97,8 @@ module ContentfulRedis
           endpoint,
           'sys.id': id,
           content_type: self.class.content_model,
-          include: 1)
+          include: 1
+        )
       ]
 
       self.class.send(:searchable_fields).each do |field|
@@ -127,7 +128,7 @@ module ContentfulRedis
       entries.each_with_object({}) do |entry, hash|
         type = entry.dig('sys', 'contentType', 'sys', 'id')
         id = entry.dig('sys', 'id')
-        
+
         # Catch references to deleted or archived content.
         begin
           hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
@@ -141,25 +142,21 @@ module ContentfulRedis
       entry_id = value.dig('sys', 'id')
 
       assets = model.dig('includes', 'Asset')
-      asset = if !assets.nil? && assets.is_a?(Array)
-                model.dig('includes', 'Asset').first
-              end
+      asset = assets.first if !assets.nil? && assets.is_a?(Array)
 
       if entries.key?(entry_id)
         entries[entry_id]
       elsif !asset.nil?
         ContentfulRedis::Asset.new(asset)
-      else
-        if value.is_a?(Hash)
-          # TODO: This might be better fitted in the entries_as_objects method instead
-          # Ignore objects which have a Contentful error. 
-          error_ids = model.fetch('errors', []).map{ |error| error.dig('details', 'id') }
-          return if error_ids.any? && error_ids.include?(value.dig('sys', 'id'))
+      elsif value.is_a?(Hash)
+        # TODO: This might be better fitted in the entries_as_objects method instead
+        # Ignore objects which have a Contentful error.
+        error_ids = model.fetch('errors', []).map { |error| error.dig('details', 'id') }
+        return if error_ids.any? && error_ids.include?(value.dig('sys', 'id'))
 
-          value
-        else
-          value
-        end
+        value
+      else
+        value
       end
     end
 
