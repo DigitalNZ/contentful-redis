@@ -55,7 +55,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           .with(*expected_params)
           .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-        model = ContentfulRedis::ModelBase.find('xxx', :preview)
+        model = ContentfulRedis::ModelBase.find('xxx', env: :preview)
         expect(model).to be_a ContentfulRedis::ModelBase
         expect(model.id).to eq 'xxx'
         expect(model.instance_variable_get('@title')).to eq 'Test Page'
@@ -90,7 +90,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           .with(*expected_params)
           .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-        model = ContentfulRedis::ModelBase.find_by({ id: 'xxx' }, :preview)
+        model = ContentfulRedis::ModelBase.find_by(id: 'xxx', options: { env: :preview })
         expect(model).to be_a ContentfulRedis::ModelBase
         expect(model.id).to eq 'xxx'
         expect(model.instance_variable_get('@title')).to eq 'Test Page'
@@ -128,7 +128,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           .with(*expected_params)
           .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-        model = ContentfulRedis::ModelBase.update(subject.id, :preview)
+        model = ContentfulRedis::ModelBase.update(subject.id, env: :preview)
         expect(model).to be_a ContentfulRedis::ModelBase
         expect(model.id).to eq subject.id
       end

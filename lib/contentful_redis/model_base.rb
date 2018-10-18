@@ -16,12 +16,11 @@ module ContentfulRedis
         raise ContentfulRedis::Error::ArgumentError, 'Expected Contentful model ID' unless id.is_a?(String)
 
         parameters = { 'sys.id': id, content_type: content_model }
-
         new(ContentfulRedis::Request.new(space, parameters, :get, request_env(options[:env])).call, options)
       end
 
-      def find_by(args = {}) # env = ContentfulRedis.configuration.default_env || :published)
-        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - (searchable_fields + [:options])).empty?
+      def find_by(args = {})
+        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - [searchable_fields, :options].flatten).empty?
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_index(self, value)
@@ -39,8 +38,8 @@ module ContentfulRedis
         new(ContentfulRedis::Request.new(space, parameters, :update, request_env(options[:env])).call)
       end
 
-      def destroy(id, options = { } )
-        find(id, request_env[:env]).destroy
+      def destroy(id, options = {} )
+        find(id, env: request_env(options[:env])).destroy
       end
 
       def space
@@ -64,7 +63,7 @@ module ContentfulRedis
       private
 
       def request_env(env)
-        env || ContentfulRedis.configuration.default_env || 'published'
+        env || ContentfulRedis.configuration.default_env || :published
       end
     end
 
