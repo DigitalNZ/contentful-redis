@@ -9,7 +9,7 @@ require_relative 'class_finder'
 # Base class for contentful redis intergation.
 module ContentfulRedis
   class ModelBase
-    attr_accessor :id, :errors
+    attr_accessor :id
 
     class << self
       def find(id, env = nil)
@@ -70,7 +70,6 @@ module ContentfulRedis
 
     def initialize(model)
       @id = model['items'].first.dig('sys', 'id')
-      @errors = model['errors'].nil? ? [] : model['errors'].map { |error| error.dig('details', 'id') }
 
       entries = entries_as_objects(model)
 
@@ -148,15 +147,6 @@ module ContentfulRedis
         entries[entry_id]
       elsif !asset.nil?
         ContentfulRedis::Asset.new(asset)
-      elsif value.is_a?(Hash)
-        # TODO: This might be better fitted in the entries_as_objects method instead
-        # Ignore objects which have a Contentful error.
-        error_ids = model.fetch('errors', []).map { |error| error.dig('details', 'id') }
-        return if error_ids.any? && error_ids.include?(value.dig('sys', 'id'))
-
-        value
-      else
-        value
       end
     end
 
