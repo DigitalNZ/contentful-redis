@@ -20,7 +20,9 @@ module ContentfulRedis
       end
 
       def find_by(args = {})
-        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - [searchable_fields, :options].flatten).empty?
+        unless (args.keys - [searchable_fields, :options].flatten).empty?
+          raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field"
+        end
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_index(self, value)
@@ -38,7 +40,7 @@ module ContentfulRedis
         new(ContentfulRedis::Request.new(space, parameters, :update, request_env(options[:env])).call)
       end
 
-      def destroy(id, options = {} )
+      def destroy(id, options = {})
         find(id, env: request_env(options[:env])).destroy
       end
 
@@ -127,7 +129,7 @@ module ContentfulRedis
       ids_to_attribute = model.dig('items').first['fields'].each_with_object({}) do |(field, value), hash|
         case value
         when Array
-          value.each{ |v| hash[v.dig('sys', 'id')] = field }
+          value.each { |v| hash[v.dig('sys', 'id')] = field }
         when Hash
           hash[value.dig('sys', 'id')] = field
         end
@@ -150,7 +152,11 @@ module ContentfulRedis
     end
 
     def allow?(attribute, options)
-      if !options[:only].nil?
+      only?(attribute, options) && expect?(attribute, options)
+    end
+
+    def only?(attribute, options)
+      unless options[:only].nil?
         case options[:only]
         when Array
           return false unless options[:only].include?(attribute)
@@ -159,7 +165,11 @@ module ContentfulRedis
         end
       end
 
-      if !options[:except].nil?
+      true
+    end
+
+    def expect?(attribute, options)
+      unless options[:except].nil?
         case options[:except]
         when Array
           return false if options[:except].include?(attribute)
