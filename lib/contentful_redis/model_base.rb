@@ -151,36 +151,6 @@ module ContentfulRedis
       end.compact
     end
 
-    def allow?(attribute, options)
-      only?(attribute, options) && expect?(attribute, options)
-    end
-
-    def only?(attribute, options)
-      unless options[:only].nil?
-        case options[:only]
-        when Array
-          return false unless options[:only].include?(attribute)
-        else
-          return false unless options[:only] == attribute
-        end
-      end
-
-      true
-    end
-
-    def expect?(attribute, options)
-      unless options[:except].nil?
-        case options[:except]
-        when Array
-          return false if options[:except].include?(attribute)
-        else
-          return false if options[:except] == attribute
-        end
-      end
-
-      true
-    end
-
     def extract_object_from_hash(model, value, entries)
       entry_id = value.dig('sys', 'id')
 
@@ -210,6 +180,46 @@ module ContentfulRedis
 
         ContentfulRedis.redis.set(key, id)
       end
+    end
+
+    def allow?(attribute, options)
+      only?(attribute, options) && expect?(attribute, options)
+    end
+
+    def only?(attribute, options)
+      unless options[:only].nil?
+        case options[:only]
+        when Array
+          return false unless options[:only].any? do |filter|
+            matching_attributes?(attribute, filter)
+          end
+        else
+          return false unless matching_attributes?(attribute, options[:only])
+        end
+      end
+
+      true
+    end
+
+    def expect?(attribute, options)
+      unless options[:except].nil?
+        case options[:except]
+        when Array
+          return false if options[:except].any? do |_type, filter|
+           matching_attributes?(attribute, filter)
+          end
+        else
+          return false if matching_attributes?(attribute, options[:except])
+        end
+      end
+
+      true
+    end
+    
+    # Parse the ids to the same string format.
+    # contentfulAttribute == ruby_attribute
+    def matching_attributes?(attribute, filter)
+      attribute.to_s.downcase == filter.to_s.gsub(/_/, '').downcase
     end
   end
 end
