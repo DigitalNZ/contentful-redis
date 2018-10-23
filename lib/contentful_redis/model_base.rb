@@ -9,6 +9,8 @@ require_relative 'class_finder'
 # Base class for contentful redis intergation.
 module ContentfulRedis
   class ModelBase
+    attr_accessor :id
+
     class << self
       def find(id, env = nil)
         raise ContentfulRedis::Error::ArgumentError, 'Expected Contentful model ID' unless id.is_a?(String)
@@ -67,8 +69,7 @@ module ContentfulRedis
     end
 
     def initialize(model)
-      instance_variable_set(:@id, model['items'].first.dig('sys', 'id'))
-      self.class.send(:attr_reader, :id)
+      @id = model['items'].first.dig('sys', 'id')
 
       entries = entries_as_objects(model)
 
@@ -82,16 +83,22 @@ module ContentfulRedis
                   value
                 end
 
-        instance_variable_set("@#{key.underscore}", value)
+        instance_variable_set("@#{key.underscore}", value) unless value.nil?
       end
 
       create_searchable_attribute_links if self.class.searchable_fields.any?
     end
 
     def destroy
-      keys = [ContentfulRedis::KeyManager.content_model_key(self.class.space, endpoint,
-                                                            'sys.id': id, content_type: self.class.content_model,
-                                                            include: 1)]
+      keys = [
+        ContentfulRedis::KeyManager.content_model_key(
+          self.class.space,
+          endpoint,
+          'sys.id': id,
+          content_type: self.class.content_model,
+          include: 1
+        )
+      ]
 
       self.class.send(:searchable_fields).each do |field|
         keys << ContentfulRedis::KeyManager.attribute_index(self.class, send(field.to_sym))
@@ -121,24 +128,25 @@ module ContentfulRedis
         type = entry.dig('sys', 'contentType', 'sys', 'id')
         id = entry.dig('sys', 'id')
 
-        hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
-      end
+        # Catch references to deleted or archived content.
+        begin
+          hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
+        rescue ContentfulRedis::Error::RecordNotFound => _e
+          next
+        end
+      end.compact
     end
 
     def extract_object_from_hash(model, value, entries)
       entry_id = value.dig('sys', 'id')
 
       assets = model.dig('includes', 'Asset')
-      asset = if !assets.nil? && assets.is_a?(Array)
-                model.dig('includes', 'Asset').first
-              end
+      asset = assets.first if !assets.nil? && assets.is_a?(Array)
 
       if entries.key?(entry_id)
         entries[entry_id]
       elsif !asset.nil?
         ContentfulRedis::Asset.new(asset)
-      else
-        value
       end
     end
 

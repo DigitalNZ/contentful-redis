@@ -19,7 +19,7 @@ Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
 Metrics/AbcSize:
-  Max: 25
+  Max: 28
 Style/SymbolArray:
   Enabled: false
 Style/WordArray:
