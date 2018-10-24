@@ -8,7 +8,7 @@ AllCops:
 Documentation:
   Enabled: false
 Metrics/ClassLength:
-  Max: 150
+  Max: 175
 Metrics/LineLength:
   Max: 175
   Exclude:
@@ -20,6 +20,10 @@ Metrics/BlockLength:
     - 'spec/**/*'
 Metrics/AbcSize:
   Max: 28
+Metrics/CyclomaticComplexity:
+  Max: 10
+Metrics/PerceivedComplexity:
+  Max: 10
 Style/SymbolArray:
   Enabled: false
 Style/WordArray:

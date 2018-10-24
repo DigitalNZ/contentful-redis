@@ -65,6 +65,8 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
 
       it 'can find attributes except specific one'
       it 'can exclude multiple specific attributes'
+
+      it 'has a query depth limit'
     end
 
     describe '#find_by' do
@@ -88,26 +90,28 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         expect(model.instance_variable_get('@slug')).to eq 'test-page'
       end
 
-        it 'the default_env configuration endpoint can be over written' do
-          expected_params[-1] = :preview
-          expect(ContentfulRedis::Request).to receive(:new)
-            .with(*expected_params)
-            .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
+      it 'the default_env configuration endpoint can be over written' do
+        expected_params[-1] = :preview
+        expect(ContentfulRedis::Request).to receive(:new)
+          .with(*expected_params)
+          .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-          model = ContentfulRedis::ModelBase.find_by(id: 'xxx', options: { env: :preview })
-          expect(model).to be_a ContentfulRedis::ModelBase
-          expect(model.id).to eq 'xxx'
-          expect(model.instance_variable_get('@title')).to eq 'Test Page'
-          expect(model.instance_variable_get('@slug')).to eq 'test-page'
-        end
+        model = ContentfulRedis::ModelBase.find_by(id: 'xxx', options: { env: :preview })
+        expect(model).to be_a ContentfulRedis::ModelBase
+        expect(model.id).to eq 'xxx'
+        expect(model.instance_variable_get('@title')).to eq 'Test Page'
+        expect(model.instance_variable_get('@slug')).to eq 'test-page'
+      end
 
-        it 'can find a specific attribute'
-        it 'can find multiple specific attributes'
+      it 'can find a specific attribute'
+      it 'can find multiple specific attributes'
 
-        it 'can find attributes except specific one'
-        it 'can exclude multiple specific attributes'
+      it 'can find attributes except specific one'
+      it 'can exclude multiple specific attributes'
 
-        it 'throws an error when the query attribute is not a searchable attribute' do
+      it 'has a query depth limit'
+
+      it 'throws an error when the query attribute is not a searchable attribute' do
         expect { ContentfulRedis::ModelBase.find_by(slug: 'xxx') }.to raise_error ContentfulRedis::Error::ArgumentError
       end
 
@@ -285,7 +289,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         end
 
         it 'allows multiple only attributes (string)' do
-          expect(subject.send(:allow?, 'reference',        only: ['reference'])).to eq true
+          expect(subject.send(:allow?, 'reference', only: ['reference'])).to eq true
           expect(subject.send(:allow?, 'referencedModel', only: ['referenced_model'])).to eq true
         end
 
@@ -304,7 +308,6 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           expect(subject.send(:allow?, 'anotherAttr', except: 'referenced_model')).to eq true
         end
 
-
         it 'allows any attribute except one (symbol)' do
           expect(subject.send(:allow?, 'reference',       except: :reference)).to eq false
           expect(subject.send(:allow?, 'referencedModel', except: :referenced_model)).to eq false
@@ -312,7 +315,6 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           expect(subject.send(:allow?, 'another',     except: :reference)).to eq true
           expect(subject.send(:allow?, 'anotherAttr', except: :referenced_model)).to eq true
         end
-
       end
     end
   end

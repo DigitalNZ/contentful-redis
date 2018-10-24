@@ -124,9 +124,29 @@ module ContentfulRedis
 
     def entries_as_objects(model, options)
       entries = model.dig('includes', 'Entry')
-      return {} if entries.nil? || entries.empty?
+      return {} if entries.nil? || entries.empty? || (!options[:depth].nil? && options[:depth].zero?)
 
-      ids_to_attribute = model.dig('items').first['fields'].each_with_object({}) do |(field, value), hash|
+      organised_id_types = organise_id_types(model)
+      options[:depth] = options[:depth].pred unless options[:depth].nil?
+
+      entries.each_with_object({}) do |entry, hash|
+        type = entry.dig('sys', 'contentType', 'sys', 'id')
+        id = entry.dig('sys', 'id')
+        attribute = organised_id_types[id]
+
+        next unless allow?(attribute, options)
+
+        # Catch references to deleted or archived content.
+        begin
+          hash[id] = ContentfulRedis::ClassFinder.search(type).find(id, options)
+        rescue ContentfulRedis::Error::RecordNotFound => _e
+          next
+        end
+      end.compact
+    end
+
+    def organise_id_types(model)
+      model.dig('items').first['fields'].each_with_object({}) do |(field, value), hash|
         case value
         when Array
           value.each { |v| hash[v.dig('sys', 'id')] = field }
@@ -134,21 +154,6 @@ module ContentfulRedis
           hash[value.dig('sys', 'id')] = field
         end
       end
-
-      entries.each_with_object({}) do |entry, hash|
-        type = entry.dig('sys', 'contentType', 'sys', 'id')
-        id = entry.dig('sys', 'id')
-        attribute = ids_to_attribute[id]
-
-        next unless allow?(attribute, options)
-
-        # Catch references to deleted or archived content.
-        begin
-          hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
-        rescue ContentfulRedis::Error::RecordNotFound => _e
-          next
-        end
-      end.compact
     end
 
     def extract_object_from_hash(model, value, entries)
@@ -188,13 +193,8 @@ module ContentfulRedis
 
     def only?(attribute, options)
       unless options[:only].nil?
-        case options[:only]
-        when Array
-          return false unless options[:only].any? do |filter|
-            matching_attributes?(attribute, filter)
-          end
-        else
-          return false unless matching_attributes?(attribute, options[:only])
+        return false unless [options[:only]].flatten.any? do |filter|
+          matching_attributes?(attribute, filter)
         end
       end
 
@@ -203,23 +203,18 @@ module ContentfulRedis
 
     def expect?(attribute, options)
       unless options[:except].nil?
-        case options[:except]
-        when Array
-          return false if options[:except].any? do |_type, filter|
-           matching_attributes?(attribute, filter)
-          end
-        else
-          return false if matching_attributes?(attribute, options[:except])
+        return false if [options[:except]].flatten.any? do |filter|
+          matching_attributes?(attribute, filter)
         end
       end
 
       true
     end
-    
+
     # Parse the ids to the same string format.
     # contentfulAttribute == ruby_attribute
     def matching_attributes?(attribute, filter)
-      attribute.to_s.downcase == filter.to_s.gsub(/_/, '').downcase
+      attribute.to_s.downcase == filter.to_s.delete('_').downcase
     end
   end
 end
