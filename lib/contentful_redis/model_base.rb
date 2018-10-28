@@ -12,16 +12,17 @@ module ContentfulRedis
     attr_accessor :id
 
     class << self
-      def find(id, env = nil)
+      def find(id, options = {})
         raise ContentfulRedis::Error::ArgumentError, 'Expected Contentful model ID' unless id.is_a?(String)
 
         parameters = { 'sys.id': id, content_type: content_model }
-
-        new(ContentfulRedis::Request.new(space, parameters, :get, request_env(env)).call)
+        new(ContentfulRedis::Request.new(space, parameters, :get, request_env(options[:env])).call, options)
       end
 
-      def find_by(args, env = ContentfulRedis.configuration.default_env || :published)
-        raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field" unless (args.keys - searchable_fields).empty?
+      def find_by(args = {})
+        unless (args.keys - [searchable_fields, :options].flatten).empty?
+          raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field"
+        end
 
         id = args.values.map do |value|
           key = ContentfulRedis::KeyManager.attribute_index(self, value)
@@ -30,17 +31,17 @@ module ContentfulRedis
 
         raise ContentfulRedis::Error::RecordNotFound, 'Missing attribute in glossary' if id.nil?
 
-        find(id, env)
+        find(id, args.fetch(:options, {}))
       end
 
-      def update(id, env = nil)
+      def update(id, options = {})
         parameters = { 'sys.id': id, content_type: content_model }
 
-        new(ContentfulRedis::Request.new(space, parameters, :update, request_env(env)).call)
+        new(ContentfulRedis::Request.new(space, parameters, :update, request_env(options[:env])).call)
       end
 
-      def destroy(id, env = nil)
-        find(id, env).destroy
+      def destroy(id, options = {})
+        find(id, env: request_env(options[:env])).destroy
       end
 
       def space
@@ -68,14 +69,16 @@ module ContentfulRedis
       end
     end
 
-    def initialize(model)
+    def initialize(model, options = {})
       @id = model['items'].first.dig('sys', 'id')
 
-      entries = entries_as_objects(model)
+      entries = entries_as_objects(model, options)
 
       model['items'].first['fields'].each do |key, value|
         value = case value
                 when Array
+                  # Construct the referenced entries
+                  # They will not apear in the entries hash the attribute has been filtered out
                   value.map { |val| entries[val.dig('sys', 'id')] }.compact
                 when Hash
                   extract_object_from_hash(model, value, entries)
@@ -119,22 +122,38 @@ module ContentfulRedis
       env.to_s.downcase == 'published' ? 'cdn' : 'preview'
     end
 
-    def entries_as_objects(model)
+    def entries_as_objects(model, options)
       entries = model.dig('includes', 'Entry')
+      return {} if entries.nil? || entries.empty? || (!options[:depth].nil? && options[:depth].zero?)
 
-      return {} if entries.nil? || entries.empty?
+      organised_id_types = organise_id_types(model)
+      options[:depth] = options[:depth].pred unless options[:depth].nil?
 
       entries.each_with_object({}) do |entry, hash|
         type = entry.dig('sys', 'contentType', 'sys', 'id')
         id = entry.dig('sys', 'id')
+        attribute = organised_id_types[id]
+
+        next unless allow?(attribute, options)
 
         # Catch references to deleted or archived content.
         begin
-          hash[id] = ContentfulRedis::ClassFinder.search(type).find(id)
+          hash[id] = ContentfulRedis::ClassFinder.search(type).find(id, options)
         rescue ContentfulRedis::Error::RecordNotFound => _e
           next
         end
       end.compact
+    end
+
+    def organise_id_types(model)
+      model.dig('items').first['fields'].each_with_object({}) do |(field, value), hash|
+        case value
+        when Array
+          value.each { |v| hash[v.dig('sys', 'id')] = field }
+        when Hash
+          hash[value.dig('sys', 'id')] = field
+        end
+      end
     end
 
     def extract_object_from_hash(model, value, entries)
@@ -166,6 +185,36 @@ module ContentfulRedis
 
         ContentfulRedis.redis.set(key, id)
       end
+    end
+
+    def allow?(attribute, options)
+      only?(attribute, options) && expect?(attribute, options)
+    end
+
+    def only?(attribute, options)
+      unless options[:only].nil?
+        return false unless [options[:only]].flatten.any? do |filter|
+          matching_attributes?(attribute, filter)
+        end
+      end
+
+      true
+    end
+
+    def expect?(attribute, options)
+      unless options[:except].nil?
+        return false if [options[:except]].flatten.any? do |filter|
+          matching_attributes?(attribute, filter)
+        end
+      end
+
+      true
+    end
+
+    # Parse the ids to the same string format.
+    # contentfulAttribute == ruby_attribute
+    def matching_attributes?(attribute, filter)
+      attribute.to_s.downcase == filter.to_s.delete('_').downcase
     end
   end
 end

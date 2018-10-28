@@ -10,7 +10,6 @@ A lightweight read-only contentful API wrapper which caches your responses in Re
 - Preview and production API support on a single environment
 
 ## WIP
-- Migrate tests
 - logger
 - Experiment Redis size optimization
 - auto clean up of dead Redis keys
@@ -22,7 +21,7 @@ ContentfulRedis also supports multiple API endpoints(preview and published) with
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'redis-store'
+gem 'redis-store' # optional
 gem 'contentful_redis'
 ```
 
@@ -164,9 +163,10 @@ end
 ```
 
 ### Querying
-
 All content models are found by their contentful ID. Contentful Redis only stores only one cache of the content model
 This Redis key is generated and is unique to a content model, space and endpoint.
+
+In these examples within my application I have created a class called `Contentful::Page`
 
 ```ruby
   Contentful::Page.find('<contentful_uid>')
@@ -180,7 +180,10 @@ These attributes are defined in the class declaration as `define_searchable_fiel
   Contentful::Page.find_by(slug: 'about-us') 
 ```
 
-Deleting an entry is done by calling destroy on a ContentfulRedis model object or destroy by passing id. This will delete all the redis keys, find and search keys for the entry.
+### Deleting
+An entry is done by calling destroy on a ContentfulRedis model object or destroy by passing id. This will delete all the redis keys, find and search keys for the entry.
+
+In these examples within my application I have created a class called `Contentful::Page`
 
 ```ruby
   Contentful::Page.destroy('<contentful_uid>')
@@ -191,6 +194,48 @@ or
 ```ruby
   page = Contentful::Page.find('<contentful_uid>')
   page.destroy
+```
+
+### Query optimization
+There are three optimizations that can be made on a query.
+Due to the nature of content trees and Contentful's references, we need to be able to control which references to follow.
+
+In these examples within my application I have created a class called `Contentful::Page`
+
+#### Only
+Fetch all selected reference(s)
+
+```ruby
+  # Content model which has child references called descendants
+  Contentful::Page.find('<contentful_uid>', only: :descendants)
+  Contentful::Page.find_by(slug: '<contentful_slug>', options: { only: :descendants } )
+
+  # Supports Arrays as well
+  Contentful::Page.find('<contentful_uid>', only: [:descendants])
+  Contentful::Page.find_by(slug: '<contentful_slug>', options: { only: [:descendants] } )
+```
+
+#### Except
+Fetch all references except the targeted field(s)
+
+```ruby
+  # Content model which has many references including child references called descendants
+
+  Contentful::Page.find('<contentful_uid>', except: :descendants)
+  Contentful::Page.find_by(slug: <contentful_slug>, options: { except: :descendants } )
+
+  # Supports Arrays as well
+  Contentful::Page.find('<contentful_uid>', except: [:descendants])
+  Contentful::Page.find_by(slug: <contentful_slug>, options: { except: [:descendants] } )
+```
+
+#### Depth
+Limit the reference traversal depth.
+The value is the amount of edges which to travese down.
+
+```ruby
+  Contentful::Page.find(<contentful_uid>, depth: 1 )
+  Contentful::Page.find_by(slug: <contentful_slug>, options: { depth: 1 })
 ```
 
 ### Content model overriding

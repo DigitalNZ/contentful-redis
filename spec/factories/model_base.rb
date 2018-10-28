@@ -5,5 +5,9 @@ FactoryBot.define do
     initialize_with do
       new('items' => [{ 'sys' => { 'id' => 'xxx' }, 'fields' => [] }])
     end
+
+    after(:create) do |model, _evaluator|
+      model.class.define_searchable_fields :id
+    end
   end
 end

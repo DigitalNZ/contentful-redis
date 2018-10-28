@@ -33,9 +33,8 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
       end
     end
 
-    describe '#find(id)' do
+    describe '#find' do
       let(:expected_params) { [{ access_token: 'xxxx', preview_access_token: 'xxxx', space_id: 'xxxx' }, { content_type: 'modelBase', "sys.id": 'xxx' }, :get, :published] }
-
       it 'can query by id' do
         expect(ContentfulRedis::Request).to receive(:new)
           .with(*expected_params)
@@ -54,13 +53,20 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         expect(ContentfulRedis::Request).to receive(:new)
           .with(*expected_params)
           .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
-
-        model = ContentfulRedis::ModelBase.find('xxx', :preview)
+        model = ContentfulRedis::ModelBase.find('xxx', env: :preview)
         expect(model).to be_a ContentfulRedis::ModelBase
         expect(model.id).to eq 'xxx'
         expect(model.instance_variable_get('@title')).to eq 'Test Page'
         expect(model.instance_variable_get('@slug')).to eq 'test-page'
       end
+
+      it 'can find a specific attribute'
+      it 'can find multiple specific attributes'
+
+      it 'can find attributes except specific one'
+      it 'can exclude multiple specific attributes'
+
+      it 'has a query depth limit'
     end
 
     describe '#find_by' do
@@ -90,12 +96,20 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           .with(*expected_params)
           .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-        model = ContentfulRedis::ModelBase.find_by({ id: 'xxx' }, :preview)
+        model = ContentfulRedis::ModelBase.find_by(id: 'xxx', options: { env: :preview })
         expect(model).to be_a ContentfulRedis::ModelBase
         expect(model.id).to eq 'xxx'
         expect(model.instance_variable_get('@title')).to eq 'Test Page'
         expect(model.instance_variable_get('@slug')).to eq 'test-page'
       end
+
+      it 'can find a specific attribute'
+      it 'can find multiple specific attributes'
+
+      it 'can find attributes except specific one'
+      it 'can exclude multiple specific attributes'
+
+      it 'has a query depth limit'
 
       it 'throws an error when the query attribute is not a searchable attribute' do
         expect { ContentfulRedis::ModelBase.find_by(slug: 'xxx') }.to raise_error ContentfulRedis::Error::ArgumentError
@@ -128,7 +142,7 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
           .with(*expected_params)
           .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-        model = ContentfulRedis::ModelBase.update(subject.id, :preview)
+        model = ContentfulRedis::ModelBase.update(subject.id, env: :preview)
         expect(model).to be_a ContentfulRedis::ModelBase
         expect(model.id).to eq subject.id
       end
@@ -247,6 +261,60 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         allow(subject.class).to receive(:request_env).and_return(:preview)
 
         expect(subject.send(:endpoint)).to eq 'preview'
+      end
+    end
+  end
+
+  describe 'Search Filters' do
+    describe '#allow?' do
+      context '#only?' do
+        it 'allows only one attribute (string)' do
+          expect(subject.send(:allow?, 'reference',       only: 'reference')).to eq true
+          expect(subject.send(:allow?, 'referencedModel', only: 'referenced_model')).to eq true
+        end
+
+        it 'does not allow the wrong attribute (string)' do
+          expect(subject.send(:allow?, 'attr',        only: 'reference')).to eq false
+          expect(subject.send(:allow?, 'anotherAttr', only: 'referenced_model')).to eq false
+        end
+
+        it 'allows only one attribute (symbol)' do
+          expect(subject.send(:allow?, 'reference',       only: :reference)).to eq true
+          expect(subject.send(:allow?, 'referencedModel', only: :referenced_model)).to eq true
+        end
+
+        it 'does not allow the wrong attribute (symbol)' do
+          expect(subject.send(:allow?, 'attr',        only: :reference)).to eq false
+          expect(subject.send(:allow?, 'anotherAttr', only: :referenced_model)).to eq false
+        end
+
+        it 'allows multiple only attributes (string)' do
+          expect(subject.send(:allow?, 'reference', only: ['reference'])).to eq true
+          expect(subject.send(:allow?, 'referencedModel', only: ['referenced_model'])).to eq true
+        end
+
+        it 'allows multiple only attributes (symbol)' do
+          expect(subject.send(:allow?, 'reference',       only: [:reference])).to eq true
+          expect(subject.send(:allow?, 'referencedModel', only: [:referenced_model])).to eq true
+        end
+      end
+
+      context '#except?' do
+        it 'allows any attribute except one (string)' do
+          expect(subject.send(:allow?, 'reference',       except: 'reference')).to eq false
+          expect(subject.send(:allow?, 'referencedModel', except: 'referenced_model')).to eq false
+
+          expect(subject.send(:allow?, 'another',     except: 'reference')).to eq true
+          expect(subject.send(:allow?, 'anotherAttr', except: 'referenced_model')).to eq true
+        end
+
+        it 'allows any attribute except one (symbol)' do
+          expect(subject.send(:allow?, 'reference',       except: :reference)).to eq false
+          expect(subject.send(:allow?, 'referencedModel', except: :referenced_model)).to eq false
+
+          expect(subject.send(:allow?, 'another',     except: :reference)).to eq true
+          expect(subject.send(:allow?, 'anotherAttr', except: :referenced_model)).to eq true
+        end
       end
     end
   end
