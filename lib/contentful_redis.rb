@@ -6,7 +6,7 @@ require_relative 'contentful_redis/model_base'
 # Dir["#{Dir.pwd}/lib/contentful_redis/**/*.rb"].each { |f| require f }
 
 module ContentfulRedis
-  VERSION = '0.0.5'.freeze
+  VERSION = '0.1.0'.freeze
 
   class << self
     attr_writer :configuration
