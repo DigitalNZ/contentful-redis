@@ -258,7 +258,41 @@ end
 Instead of creating rails specific implementation it is up to the developers to create your controllers and manage your webhook into your applications.
 See the [Contentful webhooks docs](https://www.contentful.com/developers/docs/concepts/webhooks/) creating your own
 
-Examples below will get you started!
+These are the setings which we have found to work the best
+We do need need any of the assests as they are handled by contentfuls image server.
+
+### Staging / UAT Update Settings
+|              | Create | Save | Autosave | Archive | Unarchive | Publish | Unpublish | Delete |
+|--------------|--------|------|----------|---------|-----------|---------|-----------|--------|
+| Content Type |        | ✔︎    |          |         |           | ✔︎       |           |        |
+| Entry        |        | ✔︎    | ✔︎        |         | ✔︎         | ✔︎       |           |        |
+| Asset        |        |      |          |         |           |         |           |        |
+|              |        |      |          |         |           |         |           |        |
+
+### Staging / UAT Update Delete
+|              | Create | Save | Autosave | Archive | Unarchive | Publish | Unpublish | Delete |
+|--------------|--------|------|----------|---------|-----------|---------|-----------|--------|
+| Content Type |        |      |          |         |           |         |           | ✔︎      |
+| Entry        |        |      |          | ✔︎       |           |         |           | ✔︎      |
+| Asset        |        |      |          |         |           |         |           |        |
+|              |        |      |          |         |           |         |           |        |
+
+
+### Production Update Settings
+|              | Create | Save | Autosave | Archive | Unarchive | Publish | Unpublish | Delete |
+|--------------|--------|------|----------|---------|-----------|---------|-----------|--------|
+| Content Type |        |      |          |         |           | ✔︎       |           |        |
+| Entry        |        |      |          |         |           | ✔︎       |           |        |
+| Asset        |        |      |          |         |           |         |           |        |
+|              |        |      |          |         |           |         |           |        |
+
+### Production Delete Settings
+|              | Create | Save | Autosave | Archive | Unarchive | Publish | Unpublish | Delete |
+|--------------|--------|------|----------|---------|-----------|---------|-----------|--------|
+| Content Type |        |      |          |         |           |         | ✔︎         | ✔︎      |
+| Entry        |        |      |          | ✔︎       |           |         | ✔︎         | ✔︎      |
+| Asset        |        |      |          |         |           |         |           |        |
+|              |        |      |          |         |           |         |           |        |
 
 Required Contentful webhooks to update the Redis cache are:
 ```json
