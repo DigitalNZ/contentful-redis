@@ -20,7 +20,7 @@ module ContentfulRedis
       end
 
       def find_by(args = {})
-        unless (args.keys - [searchable_fields, :options].flatten).empty?
+        unless (args.keys - [searchable_fields, :options, :return_nil].flatten).empty?
           raise ContentfulRedis::Error::ArgumentError, "#{args} contain fields which are not a declared as a searchable field"
         end
 
@@ -29,7 +29,11 @@ module ContentfulRedis
           key.nil? || key.empty? ? nil : ContentfulRedis.redis.get(key)
         end.compact.first
 
-        raise ContentfulRedis::Error::RecordNotFound, 'Missing attribute in glossary' if id.nil?
+        if id.nil?
+          return nil if args[:return_nil]
+
+          raise ContentfulRedis::Error::RecordNotFound, 'Missing attribute in glossary'
+        end
 
         find(id, args.fetch(:options, {}))
       end

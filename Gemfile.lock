@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    contentful_redis (0.1.0)
+    contentful_redis (0.1.1)
       faraday
       redis-store
 
@@ -42,7 +42,7 @@ GEM
     public_suffix (3.0.3)
     rainbow (3.0.0)
     rake (12.3.1)
-    redis (4.0.3)
+    redis (4.0.2)
     redis-store (1.6.0)
       redis (>= 2.2, < 5)
     rspec (3.8.0)

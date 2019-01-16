@@ -78,46 +78,67 @@ RSpec.describe ContentfulRedis::ModelBase, contentful: true do
         ContentfulRedis.redis.set(glossary_key, build(:content_model).id)
       end
 
-      it 'can query by searchable attribute' do
-        expect(ContentfulRedis::Request).to receive(:new)
-          .with(*expected_params)
-          .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
+      context 'when returns_nil is true' do
+        it 'returns nil when key is not found' do
+          model = ContentfulRedis::ModelBase.find_by(id: 'x1x1x', return_nil: true)
 
-        model = ContentfulRedis::ModelBase.find_by(id: 'xxx')
-        expect(model).to be_a ContentfulRedis::ModelBase
-        expect(model.id).to eq 'xxx'
-        expect(model.instance_variable_get('@title')).to eq 'Test Page'
-        expect(model.instance_variable_get('@slug')).to eq 'test-page'
+          expect(model).to be nil
+        end
+
+        after do
+          ContentfulRedis::ModelBase.define_searchable_fields
+          ContentfulRedis.redis.del(glossary_key)
+        end
       end
 
-      it 'the default_env configuration endpoint can be over written' do
-        expected_params[-1] = :preview
-        expect(ContentfulRedis::Request).to receive(:new)
-          .with(*expected_params)
-          .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
+      context 'when returns_nil is false' do
+        it 'raises error when key is not found' do
+          expect do
+            ContentfulRedis::ModelBase.find_by(id: 'x1x1x')
+          end.to raise_error ContentfulRedis::Error::RecordNotFound
+        end
 
-        model = ContentfulRedis::ModelBase.find_by(id: 'xxx', options: { env: :preview })
-        expect(model).to be_a ContentfulRedis::ModelBase
-        expect(model.id).to eq 'xxx'
-        expect(model.instance_variable_get('@title')).to eq 'Test Page'
-        expect(model.instance_variable_get('@slug')).to eq 'test-page'
-      end
+        it 'can query by searchable attribute' do
+          expect(ContentfulRedis::Request).to receive(:new)
+            .with(*expected_params)
+            .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-      it 'can find a specific attribute'
-      it 'can find multiple specific attributes'
+          model = ContentfulRedis::ModelBase.find_by(id: 'xxx')
+          expect(model).to be_a ContentfulRedis::ModelBase
+          expect(model.id).to eq 'xxx'
+          expect(model.instance_variable_get('@title')).to eq 'Test Page'
+          expect(model.instance_variable_get('@slug')).to eq 'test-page'
+        end
 
-      it 'can find attributes except specific one'
-      it 'can exclude multiple specific attributes'
+        it 'the default_env configuration endpoint can be over written' do
+          expected_params[-1] = :preview
+          expect(ContentfulRedis::Request).to receive(:new)
+            .with(*expected_params)
+            .and_return(instance_double(ContentfulRedis::Request, call: build(:request, :as_response)))
 
-      it 'has a query depth limit'
+          model = ContentfulRedis::ModelBase.find_by(id: 'xxx', options: { env: :preview })
+          expect(model).to be_a ContentfulRedis::ModelBase
+          expect(model.id).to eq 'xxx'
+          expect(model.instance_variable_get('@title')).to eq 'Test Page'
+          expect(model.instance_variable_get('@slug')).to eq 'test-page'
+        end
 
-      it 'throws an error when the query attribute is not a searchable attribute' do
-        expect { ContentfulRedis::ModelBase.find_by(slug: 'xxx') }.to raise_error ContentfulRedis::Error::ArgumentError
-      end
+        it 'can find a specific attribute'
+        it 'can find multiple specific attributes'
 
-      after do
-        ContentfulRedis::ModelBase.define_searchable_fields
-        ContentfulRedis.redis.del(glossary_key)
+        it 'can find attributes except specific one'
+        it 'can exclude multiple specific attributes'
+
+        it 'has a query depth limit'
+
+        it 'throws an error when the query attribute is not a searchable attribute' do
+          expect { ContentfulRedis::ModelBase.find_by(slug: 'xxx') }.to raise_error ContentfulRedis::Error::ArgumentError
+        end
+
+        after do
+          ContentfulRedis::ModelBase.define_searchable_fields
+          ContentfulRedis.redis.del(glossary_key)
+        end
       end
     end
 
