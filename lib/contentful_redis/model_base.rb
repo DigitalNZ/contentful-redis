@@ -16,7 +16,7 @@ module ContentfulRedis
         parameters = { content_type: content_model }
         response = ContentfulRedis::Request.new(space, parameters, :get, request_env(options[:env])).call
         sanitised_response = response['items'].map { |resp| { 'items' => [resp] } }
-        sanitised_response.map { |sr| [new(sr, options)] }
+        sanitised_response.map { |sr| [new(sr, options)] }.flatten
       end
 
       def find(id, options = {})
