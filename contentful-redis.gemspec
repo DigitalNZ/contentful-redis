@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-lib = File.expand_path('lib', __dir__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'contentful_redis'
+require File.expand_path("../lib/contentful_redis/version", __FILE__)
 
 Gem::Specification.new do |spec|
   spec.name          = 'contentful_redis'
